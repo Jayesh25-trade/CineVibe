@@ -23,7 +23,13 @@ const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
 // Middleware
 app.use(cors({
-  origin: ["http://localhost:8080", "http://localhost:3000", "http://localhost:5000", "http://127.0.0.1:5500"],
+origin: [
+  "http://localhost:8080",
+  "http://localhost:3000",
+  "http://localhost:5000",
+  "http://127.0.0.1:5500",
+  "https://cinevibe-ej8v.onrender.com" // ✅ Render live URL
+],
   credentials: true
 }));
 app.use(express.json());
