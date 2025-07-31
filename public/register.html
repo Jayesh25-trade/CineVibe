@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register | CineVibe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: 245 58% 65%;
+      --primary-foreground: 0 0% 98%;
+      --primary-glow: 245 58% 75%;
+      --background: 15 12% 97%;
+      --foreground: 0 0% 6%;
+      --card: 0 0% 100%;
+      --border: 15 8% 88%;
+      --input: 15 8% 88%;
+      --muted-foreground: 0 0% 45%;
+      --gradient-hero: linear-gradient(135deg, hsl(245 58% 65%), hsl(280 45% 55%));
+      --gradient-cinema: linear-gradient(180deg, hsl(15 12% 97%), hsl(25 15% 94%));
+      --shadow-cinema: 0 20px 60px -10px hsl(245 58% 65% / 0.3);
+      --shadow-card: 0 10px 30px -5px hsl(0 0% 0% / 0.1);
+      --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: var(--gradient-cinema);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: hsl(var(--foreground));
+      padding: 1rem;
+    }
+
+    .auth-container {
+      background: hsl(var(--card));
+      border-radius: 2rem;
+      padding: 3rem 2rem;
+      box-shadow: var(--shadow-cinema);
+      width: 100%;
+      max-width: 420px;
+      border: 1px solid hsl(var(--border));
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .logo h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: var(--gradient-hero);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .logo p {
+      color: hsl(var(--muted-foreground));
+      font-size: 1rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      font-size: 0.9rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 2px solid hsl(var(--border));
+      border-radius: 0.75rem;
+      background: hsl(var(--card));
+      color: hsl(var(--foreground));
+      font-size: 1rem;
+      transition: var(--transition-smooth);
+      font-family: 'Quicksand', sans-serif;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    }
+
+    .form-input::placeholder {
+      color: hsl(var(--muted-foreground));
+    }
+
+    .form-input.error {
+      border-color: hsl(0 84.2% 60.2%);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      background: var(--gradient-hero);
+      color: hsl(var(--primary-foreground));
+      border: none;
+      border-radius: 0.75rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      font-family: 'Quicksand', sans-serif;
+      margin-top: 1rem;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-cinema);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .password-requirements {
+      margin-top: 0.5rem;
+      font-size: 0.8rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .requirement {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .requirement.valid {
+      color: hsl(142 76% 36%);
+    }
+
+    .requirement.invalid {
+      color: hsl(0 84.2% 60.2%);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 2rem 0;
+      color: hsl(var(--muted-foreground));
+      font-size: 0.9rem;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: hsl(var(--border));
+    }
+
+    .divider span {
+      padding: 0 1rem;
+    }
+
+    .auth-footer {
+      text-align: center;
+      margin-top: 2rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .auth-footer a {
+      color: hsl(var(--primary));
+      text-decoration: none;
+      font-weight: 600;
+      transition: var(--transition-smooth);
+    }
+
+    .auth-footer a:hover {
+      color: hsl(var(--primary-glow));
+    }
+
+    .back-home {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      color: hsl(var(--primary));
+      text-decoration: none;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: var(--transition-smooth);
+    }
+
+    .back-home:hover {
+      color: hsl(var(--primary-glow));
+    }
+
+    .error-message {
+      background: hsl(0 84.2% 60.2% / 0.1);
+      color: hsl(0 84.2% 60.2%);
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      border: 1px solid hsl(0 84.2% 60.2% / 0.2);
+    }
+
+    .success-message {
+      background: hsl(142 76% 36% / 0.1);
+      color: hsl(142 76% 36%);
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      border: 1px solid hsl(142 76% 36% / 0.2);
+    }
+
+    @media (max-width: 480px) {
+      .auth-container {
+        padding: 2rem 1.5rem;
+      }
+      
+      .back-home {
+        position: relative;
+        top: auto;
+        left: auto;
+        margin-bottom: 2rem;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="/" class="back-home">← Back to Home</a>
+  
+  <div class="auth-container">
+    <div class="logo">
+      <h1>CineVibe</h1>
+      <p>Start your cinematic adventure</p>
+    </div>
+
+    <div id="messageContainer"></div>
+
+    <form id="registerForm">
+      <div class="form-group">
+        <label class="form-label" for="email">Email Address</label>
+        <input 
+          class="form-input" 
+          id="email" 
+          type="email" 
+          placeholder="Enter your email"
+          required 
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input 
+          class="form-input" 
+          id="password" 
+          type="password" 
+          placeholder="Create a password"
+          required 
+        />
+        <div class="password-requirements">
+          <div class="requirement" id="lengthReq">
+            <span>•</span> At least 8 characters
+          </div>
+          <div class="requirement" id="upperReq">
+            <span>•</span> One uppercase letter
+          </div>
+          <div class="requirement" id="lowerReq">
+            <span>•</span> One lowercase letter
+          </div>
+          <div class="requirement" id="numberReq">
+            <span>•</span> One number
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="confirmPassword">Confirm Password</label>
+        <input 
+          class="form-input" 
+          id="confirmPassword" 
+          type="password" 
+          placeholder="Confirm your password"
+          required 
+        />
+      </div>
+
+      <button type="submit" class="btn-primary" id="registerBtn">
+        Create Account
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Already have an account? <a href="login.html">Sign in here</a></p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCaCkLbYCHKt91FO1SoynTOHI8FXeo5z5M",
+      authDomain: "cinevibe-c0041.firebaseapp.com",
+      projectId: "cinevibe-c0041",
+      storageBucket: "cinevibe-c0041.firebasestorage.app",
+      messagingSenderId: "32841886347",
+      appId: "1:32841886347:web:decabd41f242fac4e0428e",
+      measurementId: "G-HKN760LCRC"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const messageContainer = document.getElementById('messageContainer');
+    const registerForm = document.getElementById('registerForm');
+    const registerBtn = document.getElementById('registerBtn');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+
+    // Password validation requirements
+    const requirements = {
+      length: document.getElementById('lengthReq'),
+      upper: document.getElementById('upperReq'),
+      lower: document.getElementById('lowerReq'),
+      number: document.getElementById('numberReq')
+    };
+
+    function showMessage(message, type = 'error') {
+      messageContainer.innerHTML = `<div class="${type}-message">${message}</div>`;
+      setTimeout(() => {
+        messageContainer.innerHTML = '';
+      }, 5000);
+    }
+
+    function setLoading(loading) {
+      registerBtn.disabled = loading;
+      registerBtn.textContent = loading ? 'Creating Account...' : 'Create Account';
+    }
+
+    function validatePassword(password) {
+      const checks = {
+        length: password.length >= 8,
+        upper: /[A-Z]/.test(password),
+        lower: /[a-z]/.test(password),
+        number: /\d/.test(password)
+      };
+
+      Object.keys(checks).forEach(key => {
+        requirements[key].className = `requirement ${checks[key] ? 'valid' : 'invalid'}`;
+      });
+
+      return Object.values(checks).every(check => check);
+    }
+
+    passwordInput.addEventListener('input', (e) => {
+      validatePassword(e.target.value);
+    });
+
+    confirmPasswordInput.addEventListener('input', (e) => {
+      const password = passwordInput.value;
+      const confirmPassword = e.target.value;
+      
+      if (confirmPassword && password !== confirmPassword) {
+        e.target.classList.add('error');
+      } else {
+        e.target.classList.remove('error');
+      }
+    });
+
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const password = passwordInput.value;
+      const confirmPassword = confirmPasswordInput.value;
+
+      if (!email || !password || !confirmPassword) {
+        showMessage('Please fill in all fields.');
+        return;
+      }
+
+      if (!validatePassword(password)) {
+        showMessage('Password does not meet requirements.');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        showMessage('Passwords do not match.');
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        showMessage('Account created successfully! Redirecting to login...', 'success');
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 2000);
+      } catch (error) {
+        let errorMessage = 'An error occurred. Please try again.';
+        
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            errorMessage = 'An account with this email already exists.';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = 'Please enter a valid email address.';
+            break;
+          case 'auth/weak-password':
+            errorMessage = 'Password is too weak. Please choose a stronger password.';
+            break;
+        }
+        
+        showMessage(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    });
+  </script>
+</body>
+</html>

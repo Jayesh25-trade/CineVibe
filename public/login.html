@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | CineVibe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: 245 58% 65%;
+      --primary-foreground: 0 0% 98%;
+      --primary-glow: 245 58% 75%;
+      --background: 15 12% 97%;
+      --foreground: 0 0% 6%;
+      --card: 0 0% 100%;
+      --border: 15 8% 88%;
+      --input: 15 8% 88%;
+      --muted-foreground: 0 0% 45%;
+      --gradient-hero: linear-gradient(135deg, hsl(245 58% 65%), hsl(280 45% 55%));
+      --gradient-cinema: linear-gradient(180deg, hsl(15 12% 97%), hsl(25 15% 94%));
+      --shadow-cinema: 0 20px 60px -10px hsl(245 58% 65% / 0.3);
+      --shadow-card: 0 10px 30px -5px hsl(0 0% 0% / 0.1);
+      --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: var(--gradient-cinema);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: hsl(var(--foreground));
+      padding: 1rem;
+    }
+
+    .auth-container {
+      background: hsl(var(--card));
+      border-radius: 2rem;
+      padding: 3rem 2rem;
+      box-shadow: var(--shadow-cinema);
+      width: 100%;
+      max-width: 420px;
+      border: 1px solid hsl(var(--border));
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .logo h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: var(--gradient-hero);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .logo p {
+      color: hsl(var(--muted-foreground));
+      font-size: 1rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      font-size: 0.9rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 2px solid hsl(var(--border));
+      border-radius: 0.75rem;
+      background: hsl(var(--card));
+      color: hsl(var(--foreground));
+      font-size: 1rem;
+      transition: var(--transition-smooth);
+      font-family: 'Quicksand', sans-serif;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: hsl(var(--primary));
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    }
+
+    .form-input::placeholder {
+      color: hsl(var(--muted-foreground));
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      background: var(--gradient-hero);
+      color: hsl(var(--primary-foreground));
+      border: none;
+      border-radius: 0.75rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      font-family: 'Quicksand', sans-serif;
+      margin-top: 1rem;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-cinema);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 2rem 0;
+      color: hsl(var(--muted-foreground));
+      font-size: 0.9rem;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: hsl(var(--border));
+    }
+
+    .divider span {
+      padding: 0 1rem;
+    }
+
+    .auth-footer {
+      text-align: center;
+      margin-top: 2rem;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .auth-footer a {
+      color: hsl(var(--primary));
+      text-decoration: none;
+      font-weight: 600;
+      transition: var(--transition-smooth);
+    }
+
+    .auth-footer a:hover {
+      color: hsl(var(--primary-glow));
+    }
+
+    .back-home {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      color: hsl(var(--primary));
+      text-decoration: none;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: var(--transition-smooth);
+    }
+
+    .back-home:hover {
+      color: hsl(var(--primary-glow));
+    }
+
+    .error-message {
+      background: hsl(0 84.2% 60.2% / 0.1);
+      color: hsl(0 84.2% 60.2%);
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      border: 1px solid hsl(0 84.2% 60.2% / 0.2);
+    }
+
+    .success-message {
+      background: hsl(142 76% 36% / 0.1);
+      color: hsl(142 76% 36%);
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      border: 1px solid hsl(142 76% 36% / 0.2);
+    }
+
+    @media (max-width: 480px) {
+      .auth-container {
+        padding: 2rem 1.5rem;
+      }
+      
+      .back-home {
+        position: relative;
+        top: auto;
+        left: auto;
+        margin-bottom: 2rem;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="/" class="back-home">← Back to Home</a>
+  
+  <div class="auth-container">
+    <div class="logo">
+      <h1>CineVibe</h1>
+      <p>Welcome back to your movie journey</p>
+    </div>
+
+    <div id="messageContainer"></div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label class="form-label" for="email">Email Address</label>
+        <input 
+          class="form-input" 
+          id="email" 
+          type="email" 
+          placeholder="Enter your email"
+          required 
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input 
+          class="form-input" 
+          id="password" 
+          type="password" 
+          placeholder="Enter your password"
+          required 
+        />
+      </div>
+
+      <button type="submit" class="btn-primary" id="loginBtn">
+        Sign In
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Don't have an account? <a href="register.html">Sign up here</a></p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCaCkLbYCHKt91FO1SoynTOHI8FXeo5z5M",
+      authDomain: "cinevibe-c0041.firebaseapp.com",
+      projectId: "cinevibe-c0041",
+      storageBucket: "cinevibe-c0041.firebasestorage.app",
+      messagingSenderId: "32841886347",
+      appId: "1:32841886347:web:decabd41f242fac4e0428e",
+      measurementId: "G-HKN760LCRC"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const messageContainer = document.getElementById('messageContainer');
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+
+    function showMessage(message, type = 'error') {
+      messageContainer.innerHTML = `<div class="${type}-message">${message}</div>`;
+      setTimeout(() => {
+        messageContainer.innerHTML = '';
+      }, 5000);
+    }
+
+    function setLoading(loading) {
+      loginBtn.disabled = loading;
+      loginBtn.textContent = loading ? 'Signing In...' : 'Sign In';
+    }
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      if (!email || !password) {
+        showMessage('Please fill in all fields.');
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        showMessage('Login successful! Redirecting...', 'success');
+        setTimeout(() => {
+window.location.href = '/onboarding.html';
+        }, 1000);
+      } catch (error) {
+        let errorMessage = 'An error occurred. Please try again.';
+        
+        switch (error.code) {
+          case 'auth/user-not-found':
+            errorMessage = 'No account found with this email address.';
+            break;
+          case 'auth/wrong-password':
+            errorMessage = 'Incorrect password. Please try again.';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = 'Please enter a valid email address.';
+            break;
+          case 'auth/too-many-requests':
+            errorMessage = 'Too many failed attempts. Please try again later.';
+            break;
+        }
+        
+        showMessage(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    });
+  </script>
+</body>
+</html>
