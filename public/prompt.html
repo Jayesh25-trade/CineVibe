@@ -36,6 +36,8 @@
 </script>
 
   <style>
+
+    
     * {
       box-sizing: border-box;
       margin: 0;
@@ -756,21 +758,66 @@
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
       }
     }
+    
+
+.primary-button, .secondary-button {
+  padding: 0.8rem 1.2rem;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  transition: all 0.25s ease;
+}
+.primary-button {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+}
+.primary-button:hover { box-shadow: var(--shadow-intense); transform: scale(1.03); }
+
+.secondary-button {
+  background: transparent;
+  color: var(--text-secondary);
+}
+.secondary-button:hover {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  box-shadow: 0 0 18px rgba(50, 200, 255, 0.25);
+}
+.logo {
+  cursor: pointer;
+  user-select: none;
+}
+.logo:hover .logo-text {
+  opacity: 0.9;
+  transform: scale(1.02);
+  transition: all 0.2s ease;
+}
+
+/* Reuse existing .modal backdrop */
+
+
   </style>
 </head>
 <body>
-  <!-- Navigation -->
-  <nav class="navbar">
-    <div class="logo">
-      <div class="logo-icon">C</div>
-      <div class="logo-text">CineVibe</div>
-    </div>
-    <div class="nav-actions">
-      <button class="history-button" id="historyToggle">
-        📚 History
-      </button>
-    </div>
+<!-- Navigation -->
+<nav class="navbar">
+  <div class="logo" id="logoHome">
+    <div class="logo-icon">C</div>
+    <div class="logo-text">CineVibe</div>
+  </div>
+
+
+  <div class="nav-actions">
+  <button class="history-button" id="historyToggle">📚 History</button>
+  <button class="history-button" id="musicToggle">🔊 Music: Off</button>
+<input id="musicVolume" type="range" min="0" max="1" step="0.01" value="0.25" style="width:120px">
+
+
+</div>
+
   </nav>
+  
 
   <!-- Main Content -->
   <div class="container">
@@ -798,8 +845,8 @@
 
     <!-- Trending Section -->
     <div class="trending-section" id="trendingSection">
-      <h2 class="section-title">🔥 Trending Now</h2>
-      <div class="trending-grid" id="trendingGrid"></div>
+      <!-- <h2 class="section-title">🔥 Trending Now</h2> -->
+      <!-- <div class="trending-grid" id="trendingGrid"></div> -->
     </div>
 
     <!-- History Section -->
@@ -878,376 +925,71 @@
       <!-- Modal content will be populated by JavaScript -->
     </div>
   </div>
+  <!-- Create Room Modal -->
+<div class="modal" id="createRoomModal">
+  <div class="room-modal-content">
+    <button class="modal-close" id="createRoomClose">&times;</button>
+    <div class="room-form">
+      <h2 class="room-title">Create a Watch Room</h2>
+      <p class="room-subtitle">Invite friends and vibe together in real time</p>
 
-  <script>
-    // State
-    let isLoading = false;
-    let currentMovies = [];
-    let showingHistory = false;
+      <div class="room-field">
+        <label class="room-label">Display Name</label>
+        <input type="text" id="crDisplayName" class="room-input" placeholder="e.g., Aisha" required>
+      </div>
 
-    // DOM Elements
-    const searchForm = document.getElementById('searchForm');
-    const moodInput = document.getElementById('moodInput');
-    const searchButton = document.getElementById('searchButton');
-    const loadingScreen = document.getElementById('loadingScreen');
-    const moviesGrid = document.getElementById('moviesGrid');
-    const moviesSection = document.getElementById('moviesSection');
-    const moviesTitle = document.getElementById('moviesTitle');
-    const movieModal = document.getElementById('movieModal');
-    const modalClose = document.getElementById('modalClose');
-    const suggestionButtons = document.querySelectorAll('.suggestion-button');
-    const historyToggle = document.getElementById('historyToggle');
-    const historySection = document.getElementById('historySection');
-    const historyGrid = document.getElementById('historyGrid');
-    const trendingSection = document.getElementById('trendingSection');
-    const trendingGrid = document.getElementById('trendingGrid');
-    const moodSuggestions = document.getElementById('moodSuggestions');
+      <div class="room-field">
+        <label class="room-label">Room Name</label>
+        <input type="text" id="crRoomName" class="room-input" placeholder="e.g., Friday Scary Night" required>
+      </div>
 
-    // API Configuration
-const API_BASE_URL = window.location.hostname.includes('localhost')
-  ? 'http://localhost:5000/api'
-  : 'https://cinevibe-ej8v.onrender.com/';
-    
-    // Event Listeners
-    searchForm.addEventListener('submit', handleSearch);
-    modalClose.addEventListener('click', closeModal);
-    movieModal.addEventListener('click', (e) => {
-      if (e.target === movieModal) closeModal();
-    });
-
-    historyToggle.addEventListener('click', toggleHistory);
-
-    suggestionButtons.forEach(button => {
-      button.addEventListener('click', (e) => {
-        const mood = e.target.closest('.suggestion-button').dataset.mood;
-        moodInput.value = mood;
-        handleSearch(e);
-      });
-    });
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-      loadTrendingMovies();
-      loadSearchHistory();
-    });
-
-    // Firebase Functions
-    async function saveSearchToHistory(mood) {
-      try {
-        if (window.firebase && window.firebase.db) {
-          await window.firebase.addDoc(
-            window.firebase.collection(window.firebase.db, 'searchHistory'),
-            {
-              mood: mood,
-              timestamp: window.firebase.serverTimestamp(),
-              userId: 'guest' // In a real app, you'd use actual user auth
-            }
-          );
-        }
-      } catch (error) {
-        console.log('Firebase not configured, skipping history save');
-      }
-    }
-
-    async function loadSearchHistory() {
-      try {
-        if (window.firebase && window.firebase.db) {
-          const historyRef = window.firebase.collection(window.firebase.db, 'searchHistory');
-          const q = window.firebase.query(
-            historyRef, 
-            window.firebase.orderBy('timestamp', 'desc'), 
-            window.firebase.limit(10)
-          );
-          const querySnapshot = await window.firebase.getDocs(q);
-          
-          const history = [];
-          querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            history.push({
-              id: doc.id,
-              mood: data.mood,
-              timestamp: data.timestamp?.toDate() || new Date()
-            });
-          });
-
-          displayHistory(history);
-        }
-      } catch (error) {
-        console.log('Firebase not configured, skipping history load');
-      }
-    }
-
-    function displayHistory(history) {
-      historyGrid.innerHTML = '';
-      
-      if (history.length === 0) {
-        historyGrid.innerHTML = '<p style="text-align: center; color: var(--text-muted);">No search history yet</p>';
-        return;
-      }
-
-      history.forEach(item => {
-        const historyItem = document.createElement('div');
-        historyItem.className = 'history-item';
-        historyItem.onclick = () => {
-          moodInput.value = item.mood;
-          handleSearch({ preventDefault: () => {} });
-          toggleHistory();
-        };
-        
-        historyItem.innerHTML = `
-          <div class="history-mood">${item.mood}</div>
-          <div class="history-date">${item.timestamp.toLocaleDateString()}</div>
-        `;
-        
-        historyGrid.appendChild(historyItem);
-      });
-    }
-
-    function toggleHistory() {
-      showingHistory = !showingHistory;
-      
-      if (showingHistory) {
-        historySection.classList.add('show');
-        moviesSection.classList.remove('show');
-        trendingSection.style.display = 'none';
-        moodSuggestions.style.display = 'none';
-        historyToggle.textContent = '🎬 Movies';
-        loadSearchHistory();
-      } else {
-        historySection.classList.remove('show');
-        trendingSection.style.display = 'block';
-        moodSuggestions.style.display = 'block';
-        historyToggle.textContent = '📚 History';
-        if (currentMovies.length > 0) {
-          moviesSection.classList.add('show');
-        }
-      }
-    }
-
-    // Trending Movies
-    async function loadTrendingMovies() {
-      try {
-        const response = await fetch(`${API_BASE_URL}/trending`);
-        const data = await response.json();
-        
-        if (data.success && data.movies) {
-          displayTrendingMovies(data.movies.slice(0, 8));
-        }
-      } catch (error) {
-        console.error('Failed to load trending movies:', error);
-      }
-    }
-
-    function displayTrendingMovies(movies) {
-      trendingGrid.innerHTML = '';
-      
-      movies.forEach((movie, index) => {
-        const trendingCard = document.createElement('div');
-        trendingCard.className = 'trending-card';
-        trendingCard.style.animationDelay = `${index * 0.1}s`;
-        trendingCard.onclick = () => openMovieModal(movie);
-        
-        trendingCard.innerHTML = `
-          <img 
-            src="${movie.poster || '/placeholder-movie.jpg'}" 
-            alt="${movie.title}"
-            class="trending-poster"
-            loading="lazy"
-          >
-          <div class="trending-info">
-            <h3 class="trending-title">${movie.title}</h3>
-            <p class="trending-rating">⭐ ${movie.rating.toFixed(1)}</p>
-          </div>
-        `;
-        
-        trendingGrid.appendChild(trendingCard);
-      });
-    }
-
-    // Search Handler
-    async function handleSearch(e) {
-      e.preventDefault();
-      
-      if (isLoading) return;
-      
-      const mood = moodInput.value.trim();
-      if (!mood) return;
-
-      setLoading(true);
-      
-      try {
-        const response = await fetch(`${API_BASE_URL}/recommend`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ mood }),
-        });
-
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to get recommendations');
-        }
-
-        currentMovies = data.movies;
-        displayMovies(currentMovies);
-        moviesTitle.textContent = `Movies for "${mood}"`;
-        
-        // Save to history
-        await saveSearchToHistory(mood);
-        
-        // Hide other sections and show movies
-        if (showingHistory) toggleHistory();
-        trendingSection.style.display = 'none';
-        moodSuggestions.style.display = 'none';
-        moviesSection.classList.add('show');
-        
-      } catch (error) {
-        console.error('Search error:', error);
-        alert('Failed to get movie recommendations. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    // Loading State
-    function setLoading(loading) {
-      isLoading = loading;
-      
-      if (loading) {
-        loadingScreen.style.display = 'flex';
-        searchButton.disabled = true;
-        searchButton.textContent = 'Searching...';
-        startLoadingAnimation();
-      } else {
-        loadingScreen.style.display = 'none';
-        searchButton.disabled = false;
-        searchButton.textContent = 'Find Movies';
-      }
-    }
-
-    // Loading Animation
-    function startLoadingAnimation() {
-      const loadingDots = document.getElementById('loadingDots');
-      let dots = '';
-      
-      const interval = setInterval(() => {
-        if (!isLoading) {
-          clearInterval(interval);
-          return;
-        }
-        
-        dots = dots.length >= 3 ? '' : dots + '.';
-        loadingDots.textContent = dots;
-      }, 500);
-    }
-
-    // Display Movies
-    function displayMovies(movies) {
-      moviesGrid.innerHTML = '';
-      
-      movies.forEach((movie, index) => {
-        const movieCard = createMovieCard(movie, index);
-        moviesGrid.appendChild(movieCard);
-      });
-    }
-
-    // Create Movie Card
-    function createMovieCard(movie, index) {
-      const card = document.createElement('div');
-      card.className = 'movie-card';
-      card.style.animationDelay = `${index * 0.1}s`;
-      card.onclick = () => openMovieModal(movie);
-      
-      const platforms = movie.ottPlatforms
-        ?.filter(p => p.available)
-        ?.slice(0, 3)
-        ?.map(p => `<span class="platform-badge">${p.name}</span>`)
-        ?.join('') || '';
-      
-      card.innerHTML = `
-        <img 
-          src="${movie.poster || '/placeholder-movie.jpg'}" 
-          alt="${movie.title}"
-          class="movie-poster"
-          loading="lazy"
-        >
-        <div class="movie-info">
-          <h3 class="movie-title">${movie.title}</h3>
-          <p class="movie-year">${new Date(movie.releaseDate).getFullYear()}</p>
-          <div class="movie-platforms">${platforms}</div>
+      <div class="room-field">
+        <label class="room-label">Room ID</label>
+        <div class="room-id-row">
+          <input type="text" id="crRoomId" class="room-input" readonly>
+          <button class="pill-button" id="regenRoomId">↻</button>
+          <button class="pill-button" id="copyRoomId">Copy</button>
         </div>
-      `;
-      
-      return card;
-    }
+        <small class="room-hint">Share this code or use the Share button below</small>
+      </div>
 
-    // Movie Modal
-    function openMovieModal(movie) {
-      const modalContent = document.getElementById('modalContent');
-      
-      const platforms = movie.ottPlatforms
-        ?.map(p => `
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; border: 1px solid ${p.available ? 'var(--primary-start)' : 'var(--border-color)'}; border-radius: 0.5rem; margin-bottom: 0.5rem; background: ${p.available ? 'rgba(200, 50, 255, 0.1)' : 'var(--bg-secondary)'};">
-            <span style="color: ${p.available ? 'var(--text-primary)' : 'var(--text-secondary)'};">${p.name}</span>
-            ${p.available && p.url ? `<a href="${p.url}" target="_blank" style="color: var(--accent-cyan); text-decoration: none; font-weight: 600;">Watch</a>` : ''}
-          </div>
-        `)
-        ?.join('') || '';
-      
-      modalContent.innerHTML = `
-        <button class="modal-close" id="modalClose">&times;</button>
-        ${movie.backdrop ? `<img src="${movie.backdrop}" style="width: 100%; height: 300px; object-fit: cover; border-radius: 1rem 1rem 0 0;">` : ''}
-        <div style="padding: 2rem;">
-          <h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 2rem; margin-bottom: 1rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">${movie.title}</h2>
-          <div style="display: flex; gap: 1rem; margin-bottom: 1rem; color: var(--text-secondary);">
-            <span style="color: var(--accent-green);">⭐ ${movie.rating.toFixed(1)}</span>
-            <span>📅 ${new Date(movie.releaseDate).getFullYear()}</span>
-            ${movie.runtime ? `<span>⏱ ${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m</span>` : ''}
-          </div>
-          <p style="line-height: 1.6; margin-bottom: 2rem; color: var(--text-secondary);">${movie.overview}</p>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-            <div>
-              <h3 style="margin-bottom: 1rem; color: var(--accent-cyan);">Genres</h3>
-              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                ${movie.genres?.map(g => `<span style="padding: 0.25rem 0.75rem; background: var(--gradient-primary); border-radius: 1rem; font-size: 0.8rem; color: white;">${g}</span>`).join('') || ''}
-              </div>
-              ${movie.director ? `<h3 style="margin: 1rem 0 0.5rem; color: var(--accent-cyan);">Director</h3><p style="color: var(--text-secondary);">${movie.director}</p>` : ''}
-            </div>
-            <div>
-              <h3 style="margin-bottom: 1rem; color: var(--accent-cyan);">Available On</h3>
-              ${platforms}
-            </div>
-          </div>
-          ${movie.trailerUrl ? `
-            <div style="margin-top: 2rem;">
-              <h3 style="margin-bottom: 1rem; color: var(--accent-cyan);">Trailer</h3>
-              <iframe src="${movie.trailerUrl}" width="100%" height="300" frameborder="0" allowfullscreen style="border-radius: 0.5rem; border: 1px solid var(--border-color);"></iframe>
-            </div>
-          ` : ''}
-        </div>
-      `;
-      
-      // Re-attach close event
-      document.getElementById('modalClose').addEventListener('click', closeModal);
-      
-      movieModal.style.display = 'flex';
-    }
+      <div class="room-actions">
+        <button class="primary-button" id="crJoinBtn">Join</button>
+        <button class="secondary-button" id="crShareBtn">Share</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-    function closeModal() {
-      movieModal.style.display = 'none';
-    }
+<!-- Join Room Modal -->
+<div class="modal" id="joinRoomModal">
+  <div class="room-modal-content">
+    <button class="modal-close" id="joinRoomClose">&times;</button>
+    <div class="room-form">
+      <h2 class="room-title">Join a Room</h2>
+      <div class="room-field">
+        <label class="room-label">Display Name</label>
+        <input type="text" id="jrDisplayName" class="room-input" placeholder="e.g., Aisha" required>
+      </div>
+      <div class="room-field">
+        <label class="room-label">Room ID</label>
+        <input type="text" id="jrRoomId" class="room-input" placeholder="Paste the code">
+      </div>
+      <div class="room-actions">
+        <button class="primary-button" id="jrJoinBtn">Join</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-    // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && movieModal.style.display === 'flex') {
-        closeModal();
-      }
-    });
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 
-    // Initial load message
-    console.log('🎬 CineVibe loaded! Ready to find your perfect vibe.');
-  </script>
+  
+
+<script src="prompt.js">
+
+</script>
+
 </body>
 </html>
