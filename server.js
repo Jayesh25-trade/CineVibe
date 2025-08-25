@@ -9,6 +9,15 @@ import { fileURLToPath } from "url";
 import https from "https";
 import axios from "axios";
 import dns from "node:dns";
+import cors from "cors";
+
+app.use(cors());
+
+// OR: Allow only your frontend domain
+app.use(cors({
+  origin: "https://cine-vibe-qax9-qaae7o2ja-jayesh25-trades-projects.vercel.app",
+  methods: ["GET", "POST"],
+}));
 
 // -------------------- Path & App --------------------
 const __filename = fileURLToPath(import.meta.url);
@@ -567,3 +576,5 @@ app.listen(PORT, () => {
 });
 
 export default app;
+
+
