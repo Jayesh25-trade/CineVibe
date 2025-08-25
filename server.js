@@ -2,13 +2,12 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import express from "express";
-import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import https from "https";
 import axios from "axios";
 import dns from "node:dns";
+import express from "express";
 import cors from "cors";
 
 app.use(cors());
@@ -18,6 +17,7 @@ app.use(cors({
   origin: "https://cine-vibe-qax9-qaae7o2ja-jayesh25-trades-projects.vercel.app",
   methods: ["GET", "POST"],
 }));
+
 
 // -------------------- Path & App --------------------
 const __filename = fileURLToPath(import.meta.url);
@@ -32,19 +32,29 @@ const TMDB_API_KEY = process.env.TMDB_API_KEY || "";          // v3 key (optiona
 const TMDB_V4_TOKEN = process.env.TMDB_V4_TOKEN || "";        // v4 Read Access Token (recommended)
 
 // -------------------- Middleware --------------------
-app.use(
-  cors({
-    origin: [
-      "http://localhost:8080",
-      "http://localhost:3000",
-      "http://localhost:5000",
-      "http://127.0.0.1:5500",
-      "https://cinevibe-ej8v.onrender.com",
-      "https://cinevibe-frontend.netlify.app",
-    ],
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin: [
+//       "http://localhost:8080",
+//       "http://localhost:3000",
+//       "http://localhost:5000",
+//       "http://127.0.0.1:5500",
+//       "https://cinevibe-ej8v.onrender.com",
+//       "https://cinevibe-frontend.netlify.app",
+//     ],
+//     credentials: true,
+//   })
+// );
+
+app.use(cors({
+  origin: [
+    "http://localhost:3000",         // dev
+    "http://127.0.0.1:5500",         // dev
+    "https://cine-vibe-qax9-ffuqcrbv7-jayesh25-trades-projects.vercel.app", // vercel frontend
+  ],
+  methods: ["GET", "POST"],
+}));
+
 app.use(express.json({ limit: "1mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -560,19 +570,22 @@ app.use((req, res) => {
 });
 
 // -------------------- Start server --------------------
+// app.listen(PORT, () => {
+//   console.log(`🎬 CineVibe server running at http://localhost:${PORT}`);
+//   console.log(`📊 Health check:      http://localhost:${PORT}/api/health`);
+//   console.log(`🔥 Trending:          GET /api/trending`);
+//   console.log(`🌍 Trending (All):    GET /api/trending/all`);
+//   console.log(`🎟️  Now Playing:      GET /api/now-playing`);
+//   console.log(`⏳ Upcoming:          GET /api/upcoming`);
+//   console.log(`🎯 Recommendations:   POST /api/recommend`);
+//   console.log(`🔍 Movie search:      GET /api/movie/:title`);
+//   console.log(`💫 Web interface:     http://localhost:${PORT}/`);
+
+//   // warm cache (wrapped with retry)
+//   getTrendingMovies().catch((e) => console.error("Warm cache error:", e?.message || e));
+// });
 app.listen(PORT, () => {
   console.log(`🎬 CineVibe server running at http://localhost:${PORT}`);
-  console.log(`📊 Health check:      http://localhost:${PORT}/api/health`);
-  console.log(`🔥 Trending:          GET /api/trending`);
-  console.log(`🌍 Trending (All):    GET /api/trending/all`);
-  console.log(`🎟️  Now Playing:      GET /api/now-playing`);
-  console.log(`⏳ Upcoming:          GET /api/upcoming`);
-  console.log(`🎯 Recommendations:   POST /api/recommend`);
-  console.log(`🔍 Movie search:      GET /api/movie/:title`);
-  console.log(`💫 Web interface:     http://localhost:${PORT}/`);
-
-  // warm cache (wrapped with retry)
-  getTrendingMovies().catch((e) => console.error("Warm cache error:", e?.message || e));
 });
 
 export default app;
