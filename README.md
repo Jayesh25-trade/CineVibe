@@ -5,6 +5,9 @@ CineVibe is a mood-first movie discovery app. Users write a natural-language pro
 This README summarizes the current behavior of the provided codebase.
 
 ---
+![alt text](image-7.png)
+---
+
 
 ## Overview
 
@@ -36,6 +39,9 @@ This README summarizes the current behavior of the provided codebase.
   - TMDB rating
   - OTT availability badges with “Watch” links (when available)
   - Embedded YouTube trailer
+  ![alt text](image-1.png)
+
+
 
 ### 2) Background Music Engine
 - On each search, CineVibe analyzes the prompt and assigns a theme such as: romantic, sad, suspense, horror, comedy, action, sci-fi, upbeat, or chill.
@@ -70,12 +76,20 @@ Backed by TMDB, the landing page can render:
 
 Each row shows clickable cards that open the same details modal. Data loading is cached and guarded to keep the UI responsive.
 
+![alt text](image-4.png)
+
+![alt text](image-5.png)
+
+![alt text](image-6.png)
+
 ### 4) OTT, Trailer, Details, Rating
 - **OTT availability**: derived from TMDB watch/providers. The UI maps common providers (Netflix, Prime Video, Disney+, Hulu, Max, Apple TV+, Paramount+, Peacock, YouTube, Tubi) to recognizable badges. If a title link is available, a “Watch” button is shown.
 - **Trailer**: embedded via YouTube. The modal implements strict media hygiene: on close, trailers are programmatically stopped/unloaded and any `<video>` is paused/reset.
 - **Details**: overview, release year, runtime, genres, director, and cast.
 - **Rating**: TMDB average rating is displayed on cards and inside the modal.
+  ![alt text](image-2.png)
 
+  ![alt text](image-3.png)
 ---
 
 ## Architecture and Data Flow
