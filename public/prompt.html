@@ -793,6 +793,64 @@
   transform: scale(1.02);
   transition: all 0.2s ease;
 }
+/* --- Hide modal scrollbar but keep scrolling --- */
+.modal-content {
+  scrollbar-width: none;              /* Firefox */
+}
+.modal-content::-webkit-scrollbar {   /* Chrome/Safari/Edge */
+  display: none;
+}
+
+/* --- Footer --- */
+.site-footer {
+  width: 100%;
+  background: linear-gradient(180deg, rgba(20,20,30,0) 0%, rgba(12,12,18,1) 30%);
+  border-top: 1px solid var(--border-color);
+  margin-top: 4rem;
+}
+.site-footer__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.25rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.site-footer__brand {
+  color: var(--text-primary);
+  font-weight: 700;
+  letter-spacing: .3px;
+}
+.site-footer__links {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+.site-footer__links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color .2s ease, border-color .2s ease, transform .2s ease;
+}
+.site-footer__links a:hover {
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  transform: translateY(-1px);
+}
+.site-footer__links .dot {
+  opacity: .35;
+}
+
+/* tighten on small screens */
+@media (max-width: 768px) {
+  .site-footer__inner {
+    padding: 1rem 1.25rem;
+    flex-direction: column;
+    gap: .5rem;
+  }
+}
 
 /* Reuse existing .modal backdrop */
 
@@ -986,6 +1044,20 @@
     </div>
   </div>
 </div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <div class="site-footer__brand">© 2025 Jayesh_Mal</div>
+
+    <nav class="site-footer__links">
+      <a href="https://www.instagram.com/jayesh_cringzz/" target="_blank" rel="noopener">Instagram</a>
+      <span class="dot">•</span>
+      <a href="https://github.com/jayesh25-trade" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</footer>
+
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
