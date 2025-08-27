@@ -71,7 +71,7 @@
   // API base
   const API_BASE_URL = normalizeBaseUrl(
     location.hostname.includes('localhost') ? 'http://localhost:5000/api'
-                                            : 'https://cinevibe-ej8v.onrender.com/api'
+                                            : 'https://cinevibe-movie.onrender.com/api'
   );
 
   // ---------- Home rows helpers ----------
