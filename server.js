@@ -57,48 +57,32 @@ const OTT_PLATFORMS = [
 let trendingCache = { data: null, timestamp: 0, ttl: 60 * 60 * 1000 }; // 1h
 
 // -------------------- Networking: Hardened Clients --------------------
-// Optional IPv4-first (helps on some Windows networks)
 if (process.env.FORCE_IPV4 === "true") {
   dns.setDefaultResultOrder("ipv4first");
 }
-
-// Keep-alive HTTPS agent
 const httpsAgent = new https.Agent({
   keepAlive: true,
   maxSockets: 50,
   maxFreeSockets: 20,
-  timeout: 30_000, // socket timeout
+  timeout: 30_000,
 });
 
-// TMDB axios instance (uses v4 Bearer token if provided; otherwise falls back to v3 api_key param)
+// TMDB axios instance
 const tmdbClient = axios.create({
   baseURL: "https://api.themoviedb.org/3",
   timeout: 15_000,
   httpsAgent,
   headers: TMDB_V4_TOKEN ? { Authorization: `Bearer ${TMDB_V4_TOKEN}` } : undefined,
-  // `params` here are merged with per-request ones
   params: TMDB_V4_TOKEN ? { language: "en-US" } : { language: "en-US", api_key: TMDB_API_KEY },
   validateStatus: (s) => s >= 200 && s < 300,
 });
 
-// Generic retry wrapper with backoff + jitter
-const RETRYABLE_CODES = new Set([
-  "ECONNRESET",
-  "EAI_AGAIN",
-  "ETIMEDOUT",
-  "ENETUNREACH",
-  "EHOSTUNREACH",
-  "ECONNABORTED",
-  "EPIPE",
-]);
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
+const RETRYABLE_CODES = new Set(["ECONNRESET","EAI_AGAIN","ETIMEDOUT","ENETUNREACH","EHOSTUNREACH","ECONNABORTED","EPIPE"]);
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 async function axiosWithRetry(fn, { attempts = 4, baseDelay = 300 } = {}) {
   let lastErr;
   for (let i = 0; i < attempts; i++) {
-    try {
-      return await fn();
-    } catch (err) {
+    try { return await fn(); } catch (err) {
       lastErr = err;
       const code = err?.code || err?.cause?.code;
       const status = err?.response?.status;
@@ -112,18 +96,8 @@ async function axiosWithRetry(fn, { attempts = 4, baseDelay = 300 } = {}) {
   throw lastErr;
 }
 
-// TMDB helpers
-function qs(params) {
-  return Object.entries(params)
-    .filter(([, v]) => v !== undefined && v !== null && v !== "")
-    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-    .join("&");
-}
-
 async function tmdb(pathname, params = {}) {
-  return axiosWithRetry(() =>
-    tmdbClient.get(pathname, { params }).then((r) => r.data)
-  );
+  return axiosWithRetry(() => tmdbClient.get(pathname, { params }).then((r) => r.data));
 }
 
 function mapMovieSummary(m) {
@@ -139,33 +113,26 @@ function mapMovieSummary(m) {
   };
 }
 
-// Concurrency limiter (no extra deps)
+// simple concurrency limiter
 function pLimit(concurrency) {
   const queue = [];
   let active = 0;
-  const next = () => {
-    active--;
-    if (queue.length) queue.shift()();
-  };
-  return (fn) =>
-    new Promise((resolve, reject) => {
-      const run = async () => {
-        active++;
-        try { resolve(await fn()); }
-        catch (e) { reject(e); }
-        finally { next(); }
-      };
-      if (active < concurrency) run(); else queue.push(run);
-    });
+  const next = () => { active--; if (queue.length) queue.shift()(); };
+  return (fn) => new Promise((resolve, reject) => {
+    const run = async () => {
+      active++;
+      try { resolve(await fn()); } catch (e) { reject(e); } finally { next(); }
+    };
+    if (active < concurrency) run(); else queue.push(run);
+  });
 }
 const limit4 = pLimit(4);
 
-// -------------------- Movie detail helpers --------------------
+// -------------------- Movie/TV detail helpers --------------------
 function normalizeProviders(providerBlock) {
   if (!providerBlock) return [];
   const buckets = ["flatrate", "rent", "buy"];
   const found = new Map();
-
   buckets.forEach((b) => {
     (providerBlock[b] || []).forEach((p) => {
       const key = (p.provider_name || "").toLowerCase();
@@ -173,8 +140,6 @@ function normalizeProviders(providerBlock) {
       else found.get(key).types.add(b);
     });
   });
-
-  // map to our static list if names roughly match
   const list = [];
   for (const { name, types } of found.values()) {
     const match =
@@ -225,9 +190,72 @@ async function getMovieDetailsById(movieId, includeVideos = true) {
       popularity: data.popularity || 0,
     };
   } catch (err) {
-    console.error(`TMDB details error (id=${movieId}):`, err?.message || err);
     return null;
   }
+}
+
+async function getTvDetailsById(tvId, includeVideos = true) {
+  try {
+    const append = includeVideos ? "videos,credits,watch/providers" : "credits,watch/providers";
+    const data = await tmdb(`/tv/${tvId}`, { append_to_response: append });
+
+    const trailer = data.videos?.results?.find(
+      (v) => v.site === "YouTube" && (v.type === "Trailer" || v.type === "Teaser")
+    );
+
+    const providersUS = data["watch/providers"]?.results?.US;
+    const ottPlatforms = normalizeProviders(providersUS);
+
+    return {
+      id: String(data.id),
+      title: data.name || data.original_name || "",
+      poster: data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : null,
+      backdrop: data.backdrop_path ? `https://image.tmdb.org/t/p/w1280${data.backdrop_path}` : null,
+      overview: data.overview || "",
+      releaseDate: data.first_air_date || null,
+      rating: data.vote_average || 0,
+      voteCount: data.vote_count || 0,
+      genres: (data.genres || []).map((g) => g.name),
+      director: null,
+      cast: (data.credits?.cast || []).slice(0, 10).map((c) => c.name),
+      runtime: Array.isArray(data.episode_run_time) && data.episode_run_time.length
+        ? Number(data.episode_run_time[0])
+        : null,
+      trailerUrl: trailer ? `https://www.youtube.com/embed/${trailer.key}?autoplay=1&mute=1` : null,
+      ottPlatforms,
+      popularity: data.popularity || 0,
+    };
+  } catch (err) {
+    return null;
+  }
+}
+
+// recommendations (movie first, then tv; mix of recommendations + similar)
+async function getRecsById(id) {
+  const out = new Map();
+
+  // movie recs/similar
+  try {
+    const r1 = await tmdb(`/movie/${id}/recommendations`).catch(() => ({ results: [] }));
+    (r1.results || []).forEach(m => out.set(m.id, mapMovieSummary(m)));
+  } catch {}
+  try {
+    const r2 = await tmdb(`/movie/${id}/similar`).catch(() => ({ results: [] }));
+    (r2.results || []).forEach(m => out.set(m.id, mapMovieSummary(m)));
+  } catch {}
+
+  // tv recs/similar (in case the id is TV)
+  try {
+    const r3 = await tmdb(`/tv/${id}/recommendations`).catch(() => ({ results: [] }));
+    (r3.results || []).forEach(m => out.set(m.id, mapMovieSummary(m)));
+  } catch {}
+  try {
+    const r4 = await tmdb(`/tv/${id}/similar`).catch(() => ({ results: [] }));
+    (r4.results || []).forEach(m => out.set(m.id, mapMovieSummary(m)));
+  } catch {}
+
+  // filter weak items
+  return Array.from(out.values()).filter(m => (m.rating || 0) > 5.0).slice(0, 18);
 }
 
 async function getMovieDetails(movieTitle, includeVideos = true) {
@@ -236,8 +264,7 @@ async function getMovieDetails(movieTitle, includeVideos = true) {
     if (!search.results?.length) return null;
     const first = search.results[0];
     return getMovieDetailsById(first.id, includeVideos);
-  } catch (err) {
-    console.error(`TMDB search error ("${movieTitle}"):`, err?.message || err);
+  } catch {
     return null;
   }
 }
@@ -255,20 +282,17 @@ async function getTrendingMovies() {
       .slice(0, 20)
       .map((m) => m.id);
 
-    const results = await Promise.all(
-      ids.map((id) => limit4(() => getMovieDetailsById(id, false)))
-    );
+    const results = await Promise.all(ids.map((id) => limit4(() => getMovieDetailsById(id, false))));
     const movies = results.filter(Boolean);
 
     trendingCache = { data: movies, timestamp: now, ttl: trendingCache.ttl };
     return movies;
-  } catch (error) {
-    console.error("❌ trending error:", error?.message || error);
+  } catch {
     return [];
   }
 }
 
-// -------------------- Anime helpers (robust fallbacks) --------------------
+// -------------------- Anime helpers --------------------
 async function fetchAnimeTrending() {
   const a1 = await tmdb("/discover/movie", {
     with_original_language: "ja",
@@ -277,7 +301,6 @@ async function fetchAnimeTrending() {
     "vote_count.gte": 20,
     page: 1,
   }).catch(() => ({ results: [] }));
-
   if (a1.results?.length) return a1.results.map(mapMovieSummary);
 
   const a2 = await tmdb("/discover/movie", {
@@ -286,7 +309,6 @@ async function fetchAnimeTrending() {
     "vote_count.gte": 20,
     page: 1,
   }).catch(() => ({ results: [] }));
-
   if (a2.results?.length) return a2.results.map(mapMovieSummary);
 
   const a3 = await tmdb("/discover/tv", {
@@ -295,7 +317,6 @@ async function fetchAnimeTrending() {
     "vote_count.gte": 20,
     page: 1,
   }).catch(() => ({ results: [] }));
-
   return (a3.results || []).map(mapMovieSummary);
 }
 
@@ -309,7 +330,6 @@ async function fetchAnimeUpcoming() {
     "primary_release_date.gte": today,
     page: 1,
   }).catch(() => ({ results: [] }));
-
   if (u1.results?.length) return u1.results.map(mapMovieSummary);
 
   const u2 = await tmdb("/movie/upcoming", { region: "JP", page: 1 }).catch(() => ({ results: [] }));
@@ -321,7 +341,6 @@ async function fetchAnimeUpcoming() {
     "primary_release_date.gte": today,
     page: 1,
   }).catch(() => ({ results: [] }));
-
   if (u3.results?.length) return u3.results.map(mapMovieSummary);
 
   const u4 = await tmdb("/discover/tv", {
@@ -330,12 +349,10 @@ async function fetchAnimeUpcoming() {
     "first_air_date.gte": today,
     page: 1,
   }).catch(() => ({ results: [] }));
-
   return (u4.results || []).map(mapMovieSummary);
 }
 
 // -------------------- OpenAI Recs --------------------
-// Uses a current, documented model name.
 async function getMovieRecommendations(mood) {
   const body = {
     model: "gpt-4o-mini",
@@ -364,7 +381,7 @@ async function getMovieRecommendations(mood) {
     .split("\n")
     .map((line) => line.replace(/^[0-9]+[\.)\-\s]*/, "").trim())
     .filter(Boolean)
-    .slice(0, 15);
+    .slice(0, 30);
 
   if (!movieTitles.length) throw new Error("No movie recommendations generated");
 
@@ -387,8 +404,8 @@ app.get("/api/health", (req, res) => {
   res.json({
     status: "healthy",
     timestamp: new Date().toISOString(),
-    version: "2.1.0",
-    features: ["recommendations", "trending", "detailed-info"],
+    version: "2.2.0",
+    features: ["recommendations", "trending", "detailed-info", "more-like-this"],
   });
 });
 
@@ -401,7 +418,7 @@ app.get("/api/trending", async (req, res) => {
       movies,
       cached: Date.now() - trendingCache.timestamp < trendingCache.ttl,
     });
-  } catch (error) {
+  } catch {
     res.status(500).json({ success: false, error: "Failed to fetch trending movies" });
   }
 });
@@ -426,13 +443,39 @@ app.get("/api/movie/:title", async (req, res) => {
   try {
     const { title } = req.params;
     if (!title) return res.status(400).json({ success: false, error: "Movie title is required" });
-
     const movie = await getMovieDetails(decodeURIComponent(title));
     if (!movie) return res.status(404).json({ success: false, error: "Movie not found" });
-
     res.json({ success: true, movie });
-  } catch (error) {
+  } catch {
     res.status(500).json({ success: false, error: "Failed to search for movie" });
+  }
+});
+
+// fetch full details by TMDB id (movie, else tv)
+app.get("/api/details/:id", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+    if (!id) return res.status(400).json({ success: false, error: "ID is required" });
+
+    let item = await getMovieDetailsById(id, false);
+    if (!item) item = await getTvDetailsById(id, false);
+
+    if (!item) return res.status(404).json({ success: false, error: "Movie/TV not found" });
+    res.json({ success: true, movie: item });
+  } catch {
+    res.status(500).json({ success: false, error: "Failed to fetch details" });
+  }
+});
+
+// NEW: More Like This (recommendations/similar)
+app.get("/api/recommendations/:id", async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+    if (!id) return res.status(400).json({ success: false, error: "ID is required" });
+    const recs = await getRecsById(id);
+    res.json({ success: true, count: recs.length, movies: recs });
+  } catch {
+    res.status(500).json({ success: false, error: "Failed to fetch recommendations" });
   }
 });
 
@@ -440,7 +483,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "prompt.html"));
 });
 
-// Extra: Hollywood + Bollywood + Anime trending
+// -------- Extras (unchanged) --------
 app.get("/api/trending/all", async (req, res) => {
   try {
     const t = await tmdb("/trending/movie/week");
@@ -457,12 +500,10 @@ app.get("/api/trending/all", async (req, res) => {
     const anime = await fetchAnimeTrending();
     res.json({ success: true, hollywood, bollywood, anime });
   } catch (e) {
-    console.error("Trending/all error:", e?.message || e);
     res.status(502).json({ success: false, error: "Failed to fetch trending" });
   }
 });
 
-// Extra: Now Playing US + IN
 app.get("/api/now-playing", async (req, res) => {
   try {
     const us = await tmdb("/movie/now_playing", { region: "US", page: 1 });
@@ -473,12 +514,10 @@ app.get("/api/now-playing", async (req, res) => {
       in: (india.results || []).map(mapMovieSummary),
     });
   } catch (e) {
-    console.error("Now-playing error:", e?.message || e);
     res.status(502).json({ success: false, error: "Failed to fetch now playing" });
   }
 });
 
-// Extra: Upcoming Hollywood + Bollywood + Anime
 app.get("/api/upcoming", async (req, res) => {
   try {
     const today = new Date().toISOString().slice(0, 10);
@@ -503,32 +542,26 @@ app.get("/api/upcoming", async (req, res) => {
       anime,
     });
   } catch (e) {
-    console.error("Upcoming error:", e?.message || e);
     res.status(502).json({ success: false, error: "Failed to fetch upcoming" });
   }
 });
 
-// Rooms (in-memory demo)
+// simple demo rooms (unchanged)
 const activeRooms = new Set();
-
 app.post("/api/room/create", (req, res) => {
   const roomId = Math.random().toString(36).substr(2, 6).toUpperCase();
   if (activeRooms.has(roomId)) return res.status(409).json({ success: false, error: "Room already exists" });
   activeRooms.add(roomId);
-  console.log(`🆕 Room created: ${roomId}`);
   res.json({ success: true, roomId });
 });
-
 app.get("/api/room/join/:id", (req, res) => {
   const roomId = req.params.id.toUpperCase();
   if (!activeRooms.has(roomId)) return res.status(404).json({ success: false, error: "Room not found" });
-  console.log(`👤 Joined room: ${roomId}`);
   res.json({ success: true, roomId });
 });
 
 // -------------------- Error handlers --------------------
 app.use((err, req, res, next) => {
-  console.error("💥 Unhandled error:", err?.message || err);
   res.status(500).json({ success: false, error: "Internal server error" });
 });
 
@@ -544,6 +577,8 @@ app.use((req, res) => {
       "GET /api/upcoming",
       "POST /api/recommend",
       "GET /api/movie/:title",
+      "GET /api/details/:id",
+      "GET /api/recommendations/:id",
       "POST /api/room/create",
       "GET /api/room/join/:id",
     ],
@@ -560,10 +595,10 @@ app.listen(PORT, () => {
   console.log(`⏳ Upcoming:          GET /api/upcoming`);
   console.log(`🎯 Recommendations:   POST /api/recommend`);
   console.log(`🔍 Movie search:      GET /api/movie/:title`);
+  console.log(`📄 Details by ID:     GET /api/details/:id`);
+  console.log(`➕ More Like This:    GET /api/recommendations/:id`);
   console.log(`💫 Web interface:     http://localhost:${PORT}/`);
-
-  // warm cache (wrapped with retry)
-  getTrendingMovies().catch((e) => console.error("Warm cache error:", e?.message || e));
+  getTrendingMovies().catch(() => {});
 });
 
 export default app;

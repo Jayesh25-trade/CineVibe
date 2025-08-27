@@ -810,6 +810,9 @@
 
   <div class="nav-actions">
   <button class="history-button" id="historyToggle">📚 History</button>
+  <!-- ADD: Shuffle button -->
+<button class="history-button" id="shuffleBtn">🔀 Shuffle 50</button>
+
   <button class="history-button" id="musicToggle">🔊 Music: Off</button>
 <input id="musicVolume" type="range" min="0" max="1" step="0.01" value="0.25" style="width:120px">
 
@@ -850,8 +853,10 @@
     </div>
 
     <!-- History Section -->
+
     <div class="history-section" id="historySection">
       <h2 class="section-title">📚 Your Search History</h2>
+
       <div class="history-grid" id="historyGrid"></div>
     </div>
 

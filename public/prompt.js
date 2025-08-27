@@ -1,12 +1,3 @@
-/*
-  CineVibe — App Script (Rooms + Recommendations + BG Music + Trailer Fix)
-  -----------------------------------------------------------------------
-  - Robust DOM guards (won't crash if some elements are missing)
-  - Trailer sound fix: stop/unload iframe & pause/reset <video> on modal close
-  - Background music engine: loops based on mood/genre keywords
-  - Optional Firebase hooks (history) — safe if not configured
-*/
-
 (() => {
   'use strict';
 
@@ -55,6 +46,7 @@
   const moodSuggestions  = $('moodSuggestions');
   const logoHome         = $('logoHome');
   const heroSection      = $('heroSection');
+  const shuffleBtn       = $('shuffleBtn'); // << NEW
 
   // Rooms UI (optional)
   const createRoomModal  = $('createRoomModal');
@@ -135,14 +127,7 @@
   if (createRoomModal) createRoomModal.addEventListener('click', (e)=>{ if (e.target===createRoomModal) createRoomModal.style.display='none'; });
   if (joinRoomModal)   joinRoomModal.addEventListener('click',   (e)=>{ if (e.target===joinRoomModal)   joinRoomModal.style.display='none'; });
 
-
-
-  if (regenRoomId) regenRoomId.addEventListener('click', ()=>{ const i=$('crRoomId'); if (i) i.value = randomRoomId(); });
-  if (copyRoomIdBtn) copyRoomIdBtn.addEventListener('click', async ()=>{
-    const i=$('crRoomId'); if (!i) return;
-    const ok = await navigator.clipboard.writeText(i.value).then(()=>true).catch(()=>false);
-    ok ? toast('Room ID copied!') : alert('Copy failed. Please copy manually.');
-  });
+  
   if (crShareBtn) crShareBtn.addEventListener('click', async ()=>{
     const i = /** @type {HTMLInputElement|null} */ ($('crRoomId'));
     const id = i?.value?.trim(); if (!id) return alert('Generate a Room ID first.');
@@ -174,7 +159,7 @@
         const snap=await window.firebase.getDocs(q);
         snap.forEach(doc=>{ if (doc.data()?.roomId===roomId) room=doc.data(); });
       }
-    }catch(e){ console.warn('Room lookup error:',e); }
+    }catch{}
     if(!room) room=getRoomLocal(roomId) || {roomId,roomName:'CineVibe Room'};
     localStorage.setItem('cinevibe_displayName',displayName||'');
     const url=new URL(location.href); url.searchParams.set('roomId',roomId); url.searchParams.set('name',encodeURIComponent(displayName||'')); history.replaceState(null,'',url.toString());
@@ -225,9 +210,7 @@
 
   // ---------- Home rows (trending/now/upcoming) ----------
   function renderRow({title,containerId,movies}){
-    // Skip rendering if nothing to show
     if (!movies || movies.length === 0) return;
-
     let section=$(containerId);
     if(!section){
       section=document.createElement('section'); section.id=containerId; section.className='trending-section';
@@ -244,6 +227,57 @@
         <div class="trending-info"><h3 class="trending-title">${m.title}</h3><p class="trending-rating">⭐ ${rating}</p></div>`;
       grid.appendChild(card);
     });
+  }
+
+  // NEW: Shuffle/Remix 50
+  async function remix50() {
+    if (isLoading) return;
+    setLoading(true);
+    try {
+      const [all, nowp, upc] = await Promise.all([
+        fetchJSON(`${API_BASE_URL}/trending/all`).catch(() => null),
+        fetchJSON(`${API_BASE_URL}/now-playing`).catch(() => null),
+        fetchJSON(`${API_BASE_URL}/upcoming`).catch(() => null),
+      ]);
+
+      const pool = [];
+      const add = (arr) => (arr || []).forEach(m => m?.id && pool.push(m));
+      if (all?.success) { add(all.hollywood); add(all.bollywood); add(all.anime); }
+      if (nowp?.success) { add(nowp.us); add(nowp.in); }
+      if (upc?.success) { add(upc.hollywood); add(upc.bollywood); add(upc.anime); }
+
+      const byId = new Map();
+      pool.forEach(m => { if (!byId.has(m.id)) byId.set(m.id, m); });
+      const unique = Array.from(byId.values());
+
+      for (let i = unique.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [unique[i], unique[j]] = [unique[j], unique[i]];
+      }
+
+      const pick = unique.slice(0, 70); // some slack for 404s
+      const detailPromises = pick.map(m =>
+        fetchJSON(`${API_BASE_URL}/details/${encodeURIComponent(m.id)}`).catch(() => null)
+      );
+      const detailed = (await Promise.all(detailPromises))
+        .map(x => x?.movie)
+        .filter(Boolean);
+
+      const finalList = detailed.filter(m => (m.rating || 0) > 5.0).slice(0, 50);
+
+      if (!finalList.length) { alert('Could not assemble a remix right now. Try again.'); return; }
+
+      currentMovies = finalList;
+      displayMovies(currentMovies);
+      if (moviesTitle) moviesTitle.textContent = `🎲 Shuffle Mix (50) — Hollywood + Bollywood + Anime`;
+      hideHomeSections();
+      if (moviesSection) moviesSection.classList.add('show');
+    } catch (e) {
+      console.error('Remix error:', e);
+      alert('Remix failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   // Load and render all home rows, including Anime
@@ -296,7 +330,6 @@
     if (isLoading) return;
     const mood = moodInput?.value?.trim(); if(!mood) return;
 
-    // Auto-enable music on first search and pick theme
     if (!bgMusicEnabled) { await enableBgMusic(); if (musicToggleBtn) musicToggleBtn.textContent='🔊 Music: On'; }
     setMoodMusicFromText(mood);
 
@@ -351,10 +384,50 @@
     return card;
   }
 
-  // ---------- Modal + trailer ----------
+ // ---------- Modal + trailer + MORE LIKE THIS ----------
+  function renderMoreLikeThisSkeleton(container){
+    container.innerHTML = `
+      <h3 style="margin:1.5rem 0 .75rem;color:var(--accent-cyan);">More Like This</h3>
+      <div id="moreLikeGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;"></div>
+    `;
+  }
+
+  async function loadMoreLikeThis(id){
+    const host = $('moreLikeHost'); if (!host) return;
+    renderMoreLikeThisSkeleton(host);
+
+    const grid = $('moreLikeGrid'); if (!grid) return;
+    grid.innerHTML = `<div style="opacity:.6">Loading…</div>`;
+
+    const data = await fetchJSON(`${API_BASE_URL}/recommendations/${encodeURIComponent(id)}`).catch(()=>null);
+    const movies = data?.movies || [];
+    grid.innerHTML = '';
+
+    if (!movies.length) {
+      grid.innerHTML = `<div style="opacity:.6">No similar titles found right now.</div>`;
+      return;
+    }
+
+    movies.forEach(m => {
+      const card = document.createElement('div');
+      card.className = 'morelike-card';
+      card.style.cssText = 'cursor:pointer;border-radius:.5rem;overflow:hidden;background:#1b1b1f;border:1px solid var(--border-color);';
+      card.innerHTML = `
+        <img src="${m.poster || '/placeholder-movie.jpg'}" alt="${m.title}" style="width:100%;height:200px;object-fit:cover;display:block">
+        <div style="padding:.5rem .6rem;">
+          <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.title}</div>
+          <div style="font-size:.85rem;opacity:.8">⭐ ${Number.isFinite(m.rating)?Number(m.rating).toFixed(1):'—'} · ${toYear(m.releaseDate)}</div>
+        </div>
+      `;
+      card.addEventListener('click', () => showDetailsById(m.id));
+      grid.appendChild(card);
+    });
+  }
+
   function openMovieModal(movie){
     const modalContent=$('modalContent'); if(!movieModal || !modalContent) return;
     pauseBgForTrailer();
+
     const platforms=(movie?.ottPlatforms||[]).map(p=>`
       <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem;border:1px solid ${p?.available?'var(--primary-start)':'var(--border-color)'};border-radius:.5rem;margin-bottom:.5rem;background:${p?.available?'rgba(200,50,255,0.1)':'var(--bg-secondary)'};">
         <span style="color:${p?.available?'var(--text-primary)':'var(--text-secondary)'};">${p?.name||''}</span>
@@ -367,14 +440,18 @@
     modalContent.innerHTML = `
       <button class="modal-close" id="modalClose">&times;</button>
       ${movie?.backdrop ? `<img src="${movie.backdrop}" style="width:100%;height:300px;object-fit:cover;border-radius:1rem 1rem 0 0;">`:''}
-      <div style="padding:2rem;">
+      <div class="modal-content-inner" style="padding:2rem;">
         <h2 style="font-family:'Space Grotesk',sans-serif;font-size:2rem;margin-bottom:1rem;background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">${movie?.title||''}</h2>
         <div style="display:flex;gap:1rem;margin-bottom:1rem;color:var(--text-secondary);">
           <span style="color:var(--accent-green);">⭐ ${rating}</span>
           <span>📅 ${toYear(movie?.releaseDate)}</span>
           ${hasRuntime?`<span>⏱ ${hours}h ${mins}m</span>`:''}
         </div>
-        <p style="line-height:1.6;margin-bottom:2rem;color:var(--text-secondary);">${movie?.overview||''}</p>
+        <p style="line-height:1.6;margin-bottom:1.25rem;color:var(--text-secondary);">${movie?.overview||''}</p>
+
+        <!-- More Like This host -->
+        <div id="moreLikeHost" style="margin:1rem 0 1.75rem;"></div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
           <div>
             <h3 style="margin-bottom:1rem;color:var(--accent-cyan);">Genres</h3>
@@ -388,16 +465,22 @@
             ${platforms}
           </div>
         </div>
+
         ${movie?.trailerUrl?`
           <div style="margin-top:2rem;">
             <h3 style="margin-bottom:1rem;color:var(--accent-cyan);">Trailer</h3>
             <iframe id="cvTrailer" src="${trailerSrc}" width="100%" height="300" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="border-radius:.5rem;border:1px solid var(--border-color);"></iframe>
           </div>`:''}
       </div>`;
+
     const closeBtn=$('modalClose'); if(closeBtn) closeBtn.addEventListener('click', closeModal, {once:true});
     movieModal.addEventListener('click', (e)=>{ if(e.target===movieModal) closeModal(); }, {once:true});
     movieModal.style.display='flex';
+
+    // load “more like this”
+    loadMoreLikeThis(movie.id);
   }
+
   function stopAllMediaInModal(){
     const modalContent=$('modalContent'); if(!modalContent) return;
     modalContent.querySelectorAll('video').forEach(v=>{ try{ v.pause(); v.currentTime=0; }catch{} });
@@ -413,6 +496,7 @@
     movieModal.style.display='none';
     resumeBgAfterTrailer();
   }
+
 
   // ---------- BG Music Engine ----------
   let bgAudio=null, bgMusicEnabled=false, lastTheme=null;
@@ -468,6 +552,7 @@
   if (searchForm) searchForm.addEventListener('submit', handleSearch);
   if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal);
   if (historyToggle) historyToggle.addEventListener('click', toggleHistory);
+  if (shuffleBtn) shuffleBtn.addEventListener('click', remix50);  // << NEW
 
   suggestionButtons.forEach((button) => {
     button.addEventListener('click', (e) => {
@@ -482,7 +567,6 @@
     movieModal.addEventListener('click', (e) => { if (e.target === movieModal) closeModal(); });
   }
 
-  // Logo → home (reload to fully reset)
   if (logoHome) {
     logoHome.style.cursor = 'pointer';
     logoHome.addEventListener('click', () => { window.location.reload(); });
@@ -496,7 +580,6 @@
     }
   });
 
-  // Initial load
   document.addEventListener('DOMContentLoaded', () => {
     loadTrendingMovies();
     loadSearchHistory();
