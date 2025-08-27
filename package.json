@@ -1,25 +1,23 @@
 {
   "type": "module",
-  "name": "chill",
+  "name": "cinevibe",
   "version": "1.0.0",
-  "description": "CineVibe is an AI-powered movie recommendation platform that goes beyond traditional genre filters. It uses conversational AI to recommend movies based on a user’s emotions, moods, life situations, and preferences. The platform understands natural language inputs and provides context-aware suggestions, delivering a deeply personal and human-centric movie discovery experience.",
-  "main": "prompt.js",
+  "description": "CineVibe is an AI-powered movie recommendation platform that uses conversational inputs (mood, vibe, context) to curate movies.",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "NODE_ENV=development node server.js",
+    "test": "echo \"No tests yet\" && exit 0"
   },
-  "keywords": [],
-  "author": "",
+  "engines": {
+    "node": "20.x"
+  },
   "license": "ISC",
   "dependencies": {
     "axios": "^1.11.0",
-    "body-parser": "^2.2.0",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.1",
+    "dotenv": "^16.4.5",
     "express": "^5.1.0",
-    "form-data": "^4.0.4",
-    "multer": "^2.0.2",
-    "node-fetch": "^3.3.2",
     "openai": "^5.11.0"
   },
   "repository": {

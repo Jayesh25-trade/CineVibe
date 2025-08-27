@@ -30,8 +30,8 @@ app.use(
       "http://localhost:3000",
       "http://localhost:5000",
       "http://127.0.0.1:5500",
-      "https://cinevibe-movie.onrender.com",
-      "https://cinevibe-frontend.netlify.app",
+      "https://cinevibe-movie.onrender.com"
+      // "https://cinevibe-frontend.netlify.app",
     ],
     credentials: true,
   })
@@ -480,7 +480,7 @@ app.get("/api/recommendations/:id", async (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "prompt.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // -------- Extras (unchanged) --------
