@@ -1,964 +1,402 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
   <title>CineVibe - Movie Mood Curator</title>
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
-
-<script>
-  const firebaseConfig = {
-    apiKey: "demo-key",
-    authDomain: "cinevibe-demo.firebaseapp.com",
-    projectId: "cinevibe-demo",
-    storageBucket: "cinevibe-demo.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "demo-app-id"
-  };
-
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-
-  window.firebase = {
-    db,
-    collection: firebase.firestore().collection,
-    addDoc: async (...args) => (await firebase.firestore().collection(...args)),
-    query: firebase.firestore().query,
-    orderBy: firebase.firestore().orderBy,
-    limit: firebase.firestore().limit,
-    getDocs: firebase.firestore().getDocs,
-    serverTimestamp: firebase.firestore.FieldValue.serverTimestamp
-  };
-</script>
 
   <style>
+    /* ---------- Reset / Base ---------- */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin: 0; font-family: 'Inter', sans-serif; color: var(--text-primary); background: var(--gradient-bg); background-attachment: fixed; overflow-x: hidden; }
 
-    
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    :root {
-      /* Gen Z Dark Mode Color Palette */
+    :root{
       --bg-primary: hsl(240, 15%, 6%);
       --bg-secondary: hsl(240, 12%, 9%);
       --bg-card: hsl(240, 10%, 12%);
       --bg-glass: rgba(20, 20, 30, 0.8);
-      
+
       --text-primary: hsl(0, 0%, 95%);
       --text-secondary: hsl(240, 5%, 70%);
       --text-muted: hsl(240, 5%, 50%);
-      
-      /* Purple/Pink Gradient */
+
       --primary-start: hsl(280, 100%, 60%);
       --primary-end: hsl(320, 100%, 70%);
       --primary-glow: hsl(300, 100%, 80%);
-      
-      /* Neon Accents */
+
       --accent-cyan: hsl(180, 100%, 60%);
       --accent-blue: hsl(220, 100%, 65%);
       --accent-green: hsl(120, 100%, 60%);
-      
+
       --border-color: hsl(240, 10%, 20%);
       --border-glow: hsl(240, 10%, 30%);
-      
-      /* Gradients */
+
       --gradient-primary: linear-gradient(135deg, var(--primary-start), var(--primary-end));
       --gradient-glow: linear-gradient(135deg, var(--primary-start), var(--primary-end), var(--accent-cyan));
       --gradient-bg: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-card) 100%);
-      
-      /* Shadows */
+
       --shadow-neon: 0 0 30px rgba(200, 50, 255, 0.3);
       --shadow-card: 0 10px 40px rgba(0, 0, 0, 0.4);
       --shadow-intense: 0 0 50px rgba(200, 50, 255, 0.5);
+
+      /* spacing scale that compresses nicely on mobile */
+      --space-1: clamp(0.25rem, 1vw, 0.5rem);
+      --space-2: clamp(0.5rem, 1.2vw, 0.75rem);
+      --space-3: clamp(0.75rem, 1.6vw, 1rem);
+      --space-4: clamp(1rem, 2vw, 1.25rem);
+      --space-5: clamp(1.25rem, 3vw, 2rem);
+      --radius: 0.75rem;
+      --radius-lg: 1rem;
     }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--gradient-bg);
-      background-attachment: fixed;
-      color: var(--text-primary);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* Animated Background */
+    /* animated soft ambient background */
     body::before {
       content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: 
+      position: fixed; inset: 0;
+      background:
         radial-gradient(circle at 20% 80%, rgba(200, 50, 255, 0.1) 0%, transparent 50%),
         radial-gradient(circle at 80% 20%, rgba(50, 200, 255, 0.1) 0%, transparent 50%),
         radial-gradient(circle at 40% 40%, rgba(255, 50, 150, 0.05) 0%, transparent 50%);
-      pointer-events: none;
-      z-index: -1;
+      pointer-events: none; z-index: -1;
       animation: backgroundFloat 20s ease-in-out infinite;
     }
+    @keyframes backgroundFloat { 0%,100%{ transform: translateY(0) } 33%{ transform: translateY(-12px) } 66%{ transform: translateY(8px) } }
 
-    @keyframes backgroundFloat {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      33% { transform: translateY(-20px) rotate(1deg); }
-      66% { transform: translateY(10px) rotate(-1deg); }
-    }
-
-    .navbar {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      background: var(--bg-glass);
-      backdrop-filter: blur(20px);
+    /* ---------- Navbar ---------- */
+    .navbar{
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg-glass); backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border-color);
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      padding: var(--space-2) var(--space-4);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-2);
     }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
+    .logo{ display:flex; align-items:center; gap: .75rem; cursor:pointer; user-select:none; }
+    .logo-icon{
+      width: 2.25rem; height: 2.25rem; border-radius: .7rem;
+      background: var(--gradient-primary); color:#fff; font-weight:800;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow: var(--shadow-neon); animation: logoPulse 3s ease-in-out infinite;
     }
-
-    .logo-icon {
-      width: 2.5rem;
-      height: 2.5rem;
-      background: var(--gradient-primary);
-      border-radius: 0.75rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      color: white;
-      font-size: 1.2rem;
-      box-shadow: var(--shadow-neon);
-      animation: logoPulse 3s ease-in-out infinite;
-    }
-
-    @keyframes logoPulse {
-      0%, 100% { box-shadow: var(--shadow-neon); }
-      50% { box-shadow: var(--shadow-intense); }
-    }
-
-    .logo-text {
+    @keyframes logoPulse { 0%,100%{ box-shadow: var(--shadow-neon)} 50%{ box-shadow: var(--shadow-intense)} }
+    .logo-text{
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.75rem;
-      font-weight: bold;
+      font-size: clamp(1.1rem, 2.8vw, 1.5rem);
+      font-weight: 800;
       background: var(--gradient-primary);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip:text;
+      transition: transform .2s ease, opacity .2s ease;
+    }
+    .logo:hover .logo-text{ opacity:.9; transform: scale(1.02); }
+
+    .nav-actions{
+      display:flex; align-items:center; gap: .5rem; flex-wrap: wrap;
+      justify-content: flex-end; max-width: 100%;
+    }
+    .history-button{
+      padding: .55rem .8rem; font-size: .9rem;
+      background: transparent; border: 1px solid var(--border-color);
+      border-radius: .6rem; color: var(--text-secondary);
+      cursor: pointer; transition: all .25s ease; white-space: nowrap;
+    }
+    .history-button:hover{ border-color: var(--accent-cyan); color: var(--accent-cyan); box-shadow: 0 0 18px rgba(50,200,255,.25); }
+    #musicVolume{
+      width: clamp(90px, 22vw, 140px); accent-color: hsl(280 100% 65%);
     }
 
-    .nav-actions {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
+    /* stack actions on very small screens */
+    @media (max-width: 480px){
+      .nav-actions{ gap: .4rem; }
+      .history-button{ padding: .5rem .65rem; font-size: .85rem; }
     }
 
-    .history-button {
-      padding: 0.5rem 1rem;
-      background: transparent;
-      border: 1px solid var(--border-color);
-      border-radius: 0.5rem;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 0.9rem;
-    }
+    /* ---------- Layout ---------- */
+    .container{ max-width: 1200px; margin-inline:auto; padding: var(--space-4); }
+    @media (max-width: 768px){ .container{ padding: var(--space-3); } }
 
-    .history-button:hover {
-      border-color: var(--accent-cyan);
-      color: var(--accent-cyan);
-      box-shadow: 0 0 20px rgba(50, 200, 255, 0.3);
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem;
-    }
-
-    .hero-section {
-      text-align: center;
-      margin-bottom: 3rem;
-    }
-
-    .hero-title {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: clamp(2.5rem, 5vw, 4.5rem);
-      font-weight: bold;
-      margin-bottom: 1rem;
+    .hero-section{ text-align:center; margin-bottom: var(--space-5); }
+    .hero-title{
+      font-family:'Space Grotesk',sans-serif;
+      font-size: clamp(2rem, 6.5vw, 4.5rem);
+      font-weight: 800; margin-bottom: .6rem;
       background: var(--gradient-glow);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      animation: fadeInUp 0.8s ease-out;
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+      animation: fadeInUp .8s ease-out both;
       position: relative;
     }
-
-    .hero-title::after {
-      content: '';
-      position: absolute;
-      bottom: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100px;
-      height: 3px;
-      background: var(--gradient-primary);
-      border-radius: 2px;
-      opacity: 0.7;
+    .hero-title::after{
+      content:''; position:absolute; bottom:-10px; left:50%; transform:translateX(-50%);
+      width: clamp(70px, 14vw, 120px); height: 3px; border-radius:2px;
+      background: var(--gradient-primary); opacity: .7;
     }
-
-    .hero-subtitle {
-      font-size: 1.25rem;
+    .hero-subtitle{
+      font-size: clamp(.95rem, 2.7vw, 1.15rem);
       color: var(--text-secondary);
-      max-width: 600px;
-      margin: 0 auto 2.5rem;
-      animation: fadeInUp 0.8s ease-out 0.2s both;
+      max-width: min(680px, 92vw);
+      margin: 0 auto var(--space-4);
       line-height: 1.6;
+      animation: fadeInUp .8s ease-out .15s both;
     }
 
-    .search-form {
-      max-width: 700px;
-      margin: 0 auto 3rem;
-      position: relative;
-      animation: fadeInUp 0.8s ease-out 0.4s both;
+    .search-form{ max-width: min(760px, 95vw); margin: 0 auto var(--space-5); position: relative; animation: fadeInUp .8s ease-out .3s both; }
+    .search-input{
+      width: 100%; background: var(--bg-card); color: var(--text-primary);
+      border: 2px solid var(--border-color); border-radius: 1rem;
+      padding: 1rem 1.1rem; padding-right: clamp(7.2rem, 26vw, 10.5rem);
+      font-size: clamp(.95rem, 2.8vw, 1.05rem);
+      transition: all .25s ease;
     }
-
-    .search-input {
-      width: 100%;
-      padding: 1.25rem 1.5rem;
-      padding-right: 160px;
-      font-size: 1.1rem;
-      background: var(--bg-card);
-      border: 2px solid var(--border-color);
-      border-radius: 1rem;
-      color: var(--text-primary);
-      transition: all 0.3s ease;
-      font-family: 'Inter', sans-serif;
+    .search-input:focus{ outline:none; border-color: var(--primary-start); box-shadow: var(--shadow-neon); background: var(--bg-secondary); }
+    .search-input::placeholder{ color: var(--text-muted); }
+    .search-button{
+      position: absolute; right: .4rem; top: 50%; transform: translateY(-50%);
+      background: var(--gradient-primary); color:#fff; border:none;
+      padding: .7rem 1.1rem; border-radius: .75rem; font-weight: 700; cursor: pointer;
+      transition: all .25s ease; font-size: clamp(.9rem, 2.5vw, 1rem);
     }
+    .search-button:hover{ box-shadow: var(--shadow-intense); transform: translateY(-50%) scale(1.04); }
+    .search-button:disabled{ opacity:.6; cursor:not-allowed; transform: translateY(-50%); }
 
-    .search-input:focus {
-      outline: none;
-      border-color: var(--primary-start);
-      box-shadow: var(--shadow-neon);
-      background: var(--bg-secondary);
-    }
-
-    .search-input::placeholder {
-      color: var(--text-muted);
-    }
-
-    .search-button {
-      position: absolute;
-      right: 0.5rem;
-      top: 50%;
-      transform: translateY(-50%);
-      background: var(--gradient-primary);
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 0.75rem;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 1rem;
-    }
-
-    .search-button:hover {
-      box-shadow: var(--shadow-intense);
-      transform: translateY(-50%) scale(1.05);
-    }
-
-    .search-button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: translateY(-50%) scale(1);
-    }
-
-    /* Trending Section */
-    .trending-section {
-      margin-bottom: 3rem;
-      animation: fadeInUp 0.8s ease-out 0.6s both;
-    }
-
-    .section-title {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 2rem;
-      font-weight: bold;
-      margin-bottom: 1rem;
+    /* ---------- Sections ---------- */
+    .section-title{
+      font-family:'Space Grotesk',sans-serif;
+      font-size: clamp(1.25rem, 4.5vw, 2rem);
+      font-weight: 800; margin-bottom: .8rem; text-align:center;
       background: linear-gradient(45deg, var(--accent-cyan), var(--accent-blue));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      text-align: center;
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
     }
 
-    .trending-grid {
+    .trending-section{ margin-bottom: var(--space-5); animation: fadeInUp .8s ease-out .4s both; }
+
+    .trending-grid{
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
+      grid-template-columns: repeat(auto-fill, minmax(clamp(120px, 32vw, 170px), 1fr));
+      gap: clamp(.6rem, 2vw, 1rem);
     }
+    .trending-card{
+      background: var(--bg-card); border-radius: .8rem; overflow:hidden; border: 1px solid var(--border-color);
+      transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+      cursor: pointer; position: relative; isolation: isolate;
+    }
+    .trending-card::before{ content:''; position:absolute; inset:0; background: var(--gradient-primary); opacity:0; transition: opacity .25s ease; z-index:1; pointer-events:none; }
+    .trending-card:hover{ transform: translateY(-4px) scale(1.015); box-shadow: var(--shadow-card); border-color: var(--primary-start); }
+    .trending-card:hover::before{ opacity: .08; }
+    .trending-poster{ width:100%; aspect-ratio: 2/3; object-fit: cover; display:block; }
+    .trending-info{ padding: .6rem .7rem; }
+    .trending-title{ font-weight: 600; font-size: .95rem; line-height: 1.3; display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical; overflow:hidden; margin:0 0 .25rem; }
+    .trending-rating{ color: var(--accent-green); font-size: .85rem; font-weight: 600; }
 
-    .trending-card {
-      background: var(--bg-card);
-      border-radius: 0.75rem;
-      overflow: hidden;
-      transition: all 0.3s ease;
-      cursor: pointer;
+    /* Mood suggestions */
+    .mood-suggestions{ margin-bottom: var(--space-5); animation: fadeInUp .8s ease-out .5s both; }
+    .suggestions-title{ display:flex; align-items:center; justify-content:center; gap:.6rem; color: var(--text-secondary); margin-bottom: 1rem; font-weight:600; font-size: clamp(.9rem, 2.8vw, 1rem); }
+    .suggestions-grid{ display:flex; flex-wrap:wrap; gap: .6rem .6rem; justify-content:center; max-width: 980px; margin: 0 auto; padding-inline: .2rem; }
+    .suggestion-button{
+      position: relative; overflow:hidden; cursor:pointer;
+      padding: .65rem .95rem; border-radius: 2rem; font-size: clamp(.85rem, 2.7vw, .95rem);
+      background: var(--bg-card); color: var(--text-secondary);
+      border: 1px solid var(--border-color); transition: all .25s ease;
+      touch-action: manipulation;
+    }
+    .suggestion-button:hover{ color:#fff; border-color: var(--primary-start); transform: translateY(-2px); }
+    .suggestion-button::before{ content:''; position:absolute; inset:0; background: var(--gradient-primary); opacity:0; transition: opacity .25s ease; border-radius: inherit; }
+    .suggestion-button:hover::before{ opacity: 1; }
+    .suggestion-button span{ position: relative; z-index: 1; }
+
+    /* History */
+    .history-section{ margin-bottom: var(--space-5); display:none; }
+    .history-section.show{ display:block; animation: fadeInUp .6s ease-out both; }
+    .history-grid{ display:grid; gap: .6rem; max-width: min(820px, 95vw); margin: 0 auto; }
+    .history-item{
+      display:flex; align-items:center; justify-content:space-between; gap: .8rem;
+      padding: .8rem .9rem; border:1px solid var(--border-color); border-radius: .75rem; background: var(--bg-card);
+      cursor:pointer; transition: all .25s ease;
+    }
+    .history-item:hover{ border-color: var(--accent-cyan); background: var(--bg-secondary); }
+    .history-mood{ font-weight: 600; color: var(--text-primary); font-size: clamp(.95rem, 2.8vw, 1rem); }
+    .history-date{ color: var(--text-muted); font-size: .85rem; }
+
+    /* Movies grid */
+    .movies-section{ display:none; }
+    .movies-section.show{ display:block; }
+    .movies-grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(clamp(150px, 42vw, 220px), 1fr));
+      gap: clamp(.8rem, 2.5vw, 1.5rem);
+      padding: var(--space-4) 0;
+    }
+    .movie-card{
+      background: var(--bg-card); border:1px solid var(--border-color); border-radius: 1rem;
+      overflow:hidden; cursor: pointer; position: relative; transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+      animation: fadeInUp .6s ease-out both;
+    }
+    .movie-card:hover{ transform: translateY(-6px) scale(1.02); border-color: var(--primary-start); box-shadow: var(--shadow-card); }
+    .movie-card::before{ content:''; position:absolute; inset:0; background: var(--gradient-primary); opacity:0; transition: opacity .25s ease; z-index:1; pointer-events:none; }
+    .movie-card:hover::before{ opacity: .08; }
+    .movie-poster{ width:100%; aspect-ratio: 2/3; object-fit: cover; display:block; position: relative; z-index:2; }
+    .movie-info{ padding: .85rem .9rem; position: relative; z-index: 2; }
+    .movie-title{ font-weight: 700; margin: 0 0 .35rem; line-height: 1.35; font-size: clamp(.95rem, 2.8vw, 1.05rem); }
+    .movie-year{ color: var(--text-secondary); font-size: .9rem; margin: 0 0 .6rem; }
+    .movie-platforms{ display:flex; gap:.4rem; flex-wrap:wrap; }
+    .platform-badge{ padding: .25rem .5rem; background: var(--gradient-primary); color:#fff; font-size: .7rem; border-radius:.5rem; font-weight:700; }
+
+    /* Loading screen */
+    .loading-screen{
+      position: fixed; inset: 0; display:none; align-items:center; justify-content:center;
+      background: color-mix(in oklab, black 70%, transparent);
+      backdrop-filter: blur(20px); z-index: 100;
+      padding: var(--space-4);
+    }
+    .loading-content{ text-align:center; animation: fadeInScale .4s ease-out both; max-width: 90vw; }
+    .loading-spinner{
+      width: clamp(64px, 20vw, 88px); height: clamp(64px, 20vw, 88px);
+      margin: 0 auto 1rem; border: 4px solid var(--border-color); border-top: 4px solid var(--primary-start);
+      border-radius: 50%; animation: spin 1s linear infinite; position: relative;
+    }
+    .loading-spinner::after{
+      content:''; position:absolute; inset: .5rem; border: 2px solid transparent; border-top: 2px solid var(--accent-cyan); border-radius:50%;
+      animation: spin .8s linear infinite reverse;
+    }
+    .loading-text{ font-size: clamp(1.1rem, 3.8vw, 1.5rem); font-weight:800; margin: .25rem 0 .4rem;
+      background: var(--gradient-primary); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .loading-subtitle{ color: var(--text-secondary); max-width: 520px; margin: 0 auto; font-size: clamp(.9rem, 2.7vw, 1rem); }
+    .loading-dots{ display:flex; gap:.5rem; justify-content:center; margin-top: 1.2rem; }
+    .loading-dot{ width:.75rem; height:.75rem; border-radius:50%; background: var(--primary-start); animation: loadingDots 1.4s ease-in-out infinite; }
+    .loading-dot:nth-child(2){ animation-delay:.2s; background: var(--primary-end); }
+    .loading-dot:nth-child(3){ animation-delay:.4s; background: var(--accent-cyan); }
+
+    /* Modal (movie & room) */
+    .modal{ position: fixed; inset:0; display:none; align-items:center; justify-content:center; z-index: 200; padding: var(--space-4); background: rgba(0,0,0,.88); }
+    .modal-content{
+      background: var(--bg-card); border:1px solid var(--border-glow);
+      border-radius: 1rem; width: min(900px, 96vw); max-height: min(90vh, 100svh - 2rem);
+      overflow: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+      animation: fadeInScale .28s ease-out both; position: relative;
+    }
+    .modal-content::-webkit-scrollbar{ display:none; }
+    .modal-close{
+      position: sticky; top: .75rem; float: right; margin: .75rem;
+      width: 2.5rem; height: 2.5rem; border-radius: 50%;
+      border: none; background: var(--bg-glass); color: var(--text-primary);
+      font-size: 1.2rem; cursor: pointer; z-index: 10; transition: background .2s ease, color .2s ease;
+    }
+    .modal-close:hover{ background: var(--primary-start); color: #fff; }
+
+    /* Create/Join room modal contents (use same backdrop) */
+    .room-modal-content{
+      background: var(--bg-card); border: 1px solid var(--border-glow);
+      border-radius: 1rem; width: min(520px, 94vw); max-height: min(92vh, 100svh - 2rem);
+      overflow:auto; -webkit-overflow-scrolling: touch; padding: 1.25rem 1.1rem 1.2rem;
+      animation: fadeInScale .25s ease-out both; position: relative;
+    }
+    .room-form{ display:flex; flex-direction:column; gap: .85rem; }
+    .room-title{ margin: .2rem 0 .2rem; font-family:'Space Grotesk',sans-serif; font-size: clamp(1.25rem, 4.5vw, 1.6rem); background: var(--gradient-primary); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .room-subtitle{ color: var(--text-secondary); margin-bottom: .4rem; font-size: .95rem; }
+    .room-field{ display:flex; flex-direction:column; gap: .45rem; }
+    .room-label{ color: var(--text-secondary); font-weight:600; font-size:.9rem; }
+    .room-input{
+      background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: .65rem;
+      color: var(--text-primary); padding: .7rem .8rem; font-size: 1rem; width: 100%;
+    }
+    .room-id-row{ display:flex; gap: .5rem; flex-wrap: wrap; }
+    .pill-button{
+      padding: .6rem .8rem; border-radius: .6rem; border:1px solid var(--border-color);
+      background: var(--bg-card); color: var(--text-secondary); font-weight:700; cursor:pointer; transition: all .2s ease;
+    }
+    .pill-button:hover{ border-color: var(--accent-cyan); color: var(--accent-cyan); }
+    .room-actions{ display:flex; gap: .6rem; flex-wrap:wrap; }
+    .primary-button, .secondary-button{
+      padding: .75rem 1.05rem; border-radius: .75rem; font-weight: 800; cursor:pointer; transition: all .25s ease;
       border: 1px solid var(--border-color);
-      position: relative;
     }
+    .primary-button{ background: var(--gradient-primary); color: #fff; border: none; }
+    .primary-button:hover{ transform: scale(1.03); box-shadow: var(--shadow-intense); }
+    .secondary-button{ background: transparent; color: var(--text-secondary); }
+    .secondary-button:hover{ border-color: var(--accent-cyan); color: var(--accent-cyan); box-shadow: 0 0 18px rgba(50,200,255,.25); }
 
-    .trending-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: var(--gradient-primary);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .trending-card:hover {
-      transform: translateY(-5px) scale(1.02);
-      box-shadow: var(--shadow-card);
-      border-color: var(--primary-start);
-    }
-
-    .trending-card:hover::before {
-      opacity: 1;
-    }
-
-    .trending-poster {
-      width: 100%;
-      aspect-ratio: 2/3;
-      object-fit: cover;
-    }
-
-    .trending-info {
-      padding: 0.75rem;
-    }
-
-    .trending-title {
-      font-weight: 600;
-      font-size: 0.9rem;
-      margin-bottom: 0.25rem;
-      line-height: 1.3;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .trending-rating {
-      color: var(--accent-green);
-      font-size: 0.8rem;
-      font-weight: 500;
-    }
-
-    /* Mood Suggestions */
-    .mood-suggestions {
-      margin-bottom: 3rem;
-      animation: fadeInUp 0.8s ease-out 0.8s both;
-    }
-
-    .suggestions-title {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.75rem;
-      color: var(--text-secondary);
-      margin-bottom: 1.5rem;
-      font-size: 1rem;
-      font-weight: 500;
-    }
-
-    .suggestions-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-      justify-content: center;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    .suggestion-button {
-      padding: 0.75rem 1.25rem;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 2rem;
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .suggestion-button::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--gradient-primary);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .suggestion-button:hover {
-      color: white;
-      border-color: var(--primary-start);
-      transform: translateY(-2px);
-    }
-
-    .suggestion-button:hover::before {
-      opacity: 1;
-    }
-
-    .suggestion-button span {
-      position: relative;
-      z-index: 1;
-    }
-
-    /* History Section */
-    .history-section {
-      margin-bottom: 3rem;
-      display: none;
-    }
-
-    .history-section.show {
-      display: block;
-      animation: fadeInUp 0.6s ease-out;
-    }
-
-    .history-grid {
-      display: grid;
-      gap: 0.75rem;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .history-item {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 0.75rem;
-      padding: 1rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .history-item:hover {
-      border-color: var(--accent-cyan);
-      background: var(--bg-secondary);
-    }
-
-    .history-mood {
-      color: var(--text-primary);
-      font-weight: 500;
-    }
-
-    .history-date {
-      color: var(--text-muted);
-      font-size: 0.8rem;
-    }
-
-    /* Movies Grid */
-    .movies-section {
-      display: none;
-    }
-
-    .movies-section.show {
-      display: block;
-    }
-
-    .movies-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1.5rem;
-      padding: 2rem 0;
-    }
-
-    .movie-card {
-      background: var(--bg-card);
-      border-radius: 1rem;
-      overflow: hidden;
-      transition: all 0.3s ease;
-      cursor: pointer;
-      animation: fadeInUp 0.6s ease-out;
-      border: 1px solid var(--border-color);
-      position: relative;
-    }
-
-    .movie-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--gradient-primary);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    .movie-card:hover {
-      transform: translateY(-10px) scale(1.02);
-      box-shadow: var(--shadow-card);
-      border-color: var(--primary-start);
-    }
-
-    .movie-card:hover::before {
-      opacity: 0.1;
-    }
-
-    .movie-poster {
-      width: 100%;
-      aspect-ratio: 2/3;
-      object-fit: cover;
-      position: relative;
-      z-index: 2;
-    }
-
-    .movie-info {
-      padding: 1rem;
-      position: relative;
-      z-index: 2;
-    }
-
-    .movie-title {
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      line-height: 1.4;
-    }
-
-    .movie-year {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .movie-platforms {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-
-    .platform-badge {
-      padding: 0.25rem 0.5rem;
-      background: var(--gradient-primary);
-      color: white;
-      font-size: 0.7rem;
-      border-radius: 0.5rem;
-      font-weight: 600;
-    }
-
-    /* Loading Screen */
-    .loading-screen {
-      position: fixed;
-      inset: 0;
-      background: var(--bg-glass);
-      backdrop-filter: blur(20px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-    }
-
-    .loading-content {
-      text-align: center;
-      animation: fadeInScale 0.6s ease-out;
-    }
-
-    .loading-spinner {
-      width: 6rem;
-      height: 6rem;
-      margin: 0 auto 2rem;
-      border: 4px solid var(--border-color);
-      border-top: 4px solid var(--primary-start);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      position: relative;
-    }
-
-    .loading-spinner::after {
-      content: '';
-      position: absolute;
-      inset: 0.5rem;
-      border: 2px solid transparent;
-      border-top: 2px solid var(--accent-cyan);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite reverse;
-    }
-
-    .loading-text {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      background: var(--gradient-primary);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .loading-subtitle {
-      color: var(--text-secondary);
-      max-width: 400px;
-      margin: 0 auto;
-    }
-
-    .loading-dots {
-      display: flex;
-      gap: 0.5rem;
-      justify-content: center;
-      margin-top: 2rem;
-    }
-
-    .loading-dot {
-      width: 0.75rem;
-      height: 0.75rem;
-      background: var(--primary-start);
-      border-radius: 50%;
-      animation: loadingDots 1.4s ease-in-out infinite;
-    }
-
-    .loading-dot:nth-child(2) {
-      animation-delay: 0.2s;
-      background: var(--primary-end);
-    }
-
-    .loading-dot:nth-child(3) {
-      animation-delay: 0.4s;
-      background: var(--accent-cyan);
-    }
-
-    /* Modal */
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.9);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-      padding: 2rem;
-    }
-
-    .modal-content {
-      background: var(--bg-card);
-      border-radius: 1rem;
-      max-width: 800px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      position: relative;
-      animation: fadeInScale 0.3s ease-out;
-      border: 1px solid var(--border-glow);
-    }
-
-    .modal-close {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: var(--bg-glass);
-      border: none;
-      color: var(--text-primary);
-      width: 2.5rem;
-      height: 2.5rem;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 1.2rem;
-      z-index: 10;
-      transition: all 0.3s ease;
-    }
-
-    .modal-close:hover {
-      background: var(--primary-start);
-      color: white;
+    /* Footer */
+    .site-footer{ width:100%; background: linear-gradient(180deg, rgba(20,20,30,0) 0%, rgba(12,12,18,1) 30%); border-top: 1px solid var(--border-color); margin-top: var(--space-5); }
+    .site-footer__inner{ max-width: 1200px; margin: 0 auto; padding: 1rem var(--space-4); display:flex; align-items:center; justify-content:space-between; gap: .75rem; }
+    .site-footer__brand{ color: var(--text-primary); font-weight: 800; letter-spacing: .3px; font-size: clamp(.95rem, 3vw, 1rem); }
+    .site-footer__links{ display:flex; align-items:center; gap: .9rem; color: var(--text-secondary); font-weight:700; flex-wrap:wrap; }
+    .site-footer__links a{ color: var(--text-secondary); text-decoration:none; border-bottom:1px solid transparent; transition: color .2s ease, border-color .2s ease, transform .2s ease; }
+    .site-footer__links a:hover{ color: var(--accent-cyan); border-color: var(--accent-cyan); transform: translateY(-1px); }
+    .site-footer__links .dot{ opacity:.35; }
+    @media (max-width: 768px){
+      .site-footer__inner{ padding: .9rem var(--space-3); flex-direction: column; gap: .4rem; align-items:flex-start; }
     }
 
     /* Animations */
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    @keyframes fadeInUp{ from{ opacity:0; transform: translateY(24px) } to{ opacity:1; transform: translateY(0)} }
+    @keyframes fadeInScale{ from{ opacity:0; transform: scale(.94)} to{ opacity:1; transform: scale(1)} }
+    @keyframes spin{ to{ transform: rotate(360deg) } }
+    @keyframes loadingDots{ 0%,20%{ transform: scale(1) } 50%{ transform: scale(1.5) } 80%,100%{ transform: scale(1) } }
+
+    /* Small device fine-tuning */
+    @media (max-width: 400px){
+      .suggestions-grid{ gap: .5rem; }
+      .suggestion-button{ padding: .55rem .8rem; }
     }
-
-    @keyframes fadeInScale {
-      from {
-        opacity: 0;
-        transform: scale(0.9);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    @keyframes loadingDots {
-      0%, 20% {
-        transform: scale(1);
-      }
-      50% {
-        transform: scale(1.5);
-      }
-      80%, 100% {
-        transform: scale(1);
-      }
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .container {
-        padding: 1rem;
-      }
-      
-      .search-input {
-        padding-right: 130px;
-        font-size: 1rem;
-      }
-      
-      .search-button {
-        padding: 0.6rem 1rem;
-        font-size: 0.9rem;
-      }
-      
-      .movies-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 1rem;
-      }
-
-      .trending-grid {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      }
-    }
-    
-
-.primary-button, .secondary-button {
-  padding: 0.8rem 1.2rem;
-  border-radius: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
-  border: 1px solid var(--border-color);
-  transition: all 0.25s ease;
-}
-.primary-button {
-  background: var(--gradient-primary);
-  color: white;
-  border: none;
-}
-.primary-button:hover { box-shadow: var(--shadow-intense); transform: scale(1.03); }
-
-.secondary-button {
-  background: transparent;
-  color: var(--text-secondary);
-}
-.secondary-button:hover {
-  border-color: var(--accent-cyan);
-  color: var(--accent-cyan);
-  box-shadow: 0 0 18px rgba(50, 200, 255, 0.25);
-}
-.logo {
-  cursor: pointer;
-  user-select: none;
-}
-.logo:hover .logo-text {
-  opacity: 0.9;
-  transform: scale(1.02);
-  transition: all 0.2s ease;
-}
-/* --- Hide modal scrollbar but keep scrolling --- */
-.modal-content {
-  scrollbar-width: none;              /* Firefox */
-}
-.modal-content::-webkit-scrollbar {   /* Chrome/Safari/Edge */
-  display: none;
-}
-
-/* --- Footer --- */
-.site-footer {
-  width: 100%;
-  background: linear-gradient(180deg, rgba(20,20,30,0) 0%, rgba(12,12,18,1) 30%);
-  border-top: 1px solid var(--border-color);
-  margin-top: 4rem;
-}
-.site-footer__inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1.25rem 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.site-footer__brand {
-  color: var(--text-primary);
-  font-weight: 700;
-  letter-spacing: .3px;
-}
-.site-footer__links {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-.site-footer__links a {
-  color: var(--text-secondary);
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: color .2s ease, border-color .2s ease, transform .2s ease;
-}
-.site-footer__links a:hover {
-  color: var(--accent-cyan);
-  border-color: var(--accent-cyan);
-  transform: translateY(-1px);
-}
-.site-footer__links .dot {
-  opacity: .35;
-}
-
-/* tighten on small screens */
-@media (max-width: 768px) {
-  .site-footer__inner {
-    padding: 1rem 1.25rem;
-    flex-direction: column;
-    gap: .5rem;
-  }
-}
-
-/* Reuse existing .modal backdrop */
-
-
   </style>
 </head>
 <body>
-<!-- Navigation -->
-<nav class="navbar">
-  <div class="logo" id="logoHome">
-    <div class="logo-icon">C</div>
-    <div class="logo-text">CineVibe</div>
-  </div>
-
-
-  <div class="nav-actions">
-  <button class="history-button" id="historyToggle">📚 History</button>
-  <!-- ADD: Shuffle button -->
-<button class="history-button" id="shuffleBtn">🔀 Shuffle 50</button>
-
-  <button class="history-button" id="musicToggle">🔊 Music: Off</button>
-<input id="musicVolume" type="range" min="0" max="1" step="0.01" value="0.25" style="width:120px">
-
-
-</div>
-
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="logo" id="logoHome">
+      <div class="logo-icon">C</div>
+      <div class="logo-text">CineVibe</div>
+    </div>
+    <div class="nav-actions">
+      <button class="history-button" id="historyToggle">📚 History</button>
+      <button class="history-button" id="shuffleBtn">🔀 Shuffle 50</button>
+      <button class="history-button" id="musicToggle">🔇 Music: Off</button>
+      <input id="musicVolume" type="range" min="0" max="1" step="0.01" value="0.25" />
+    </div>
   </nav>
-  
 
   <!-- Main Content -->
   <div class="container">
-    <!-- Hero Section -->
-    <div class="hero-section">
+    <div class="hero-section" id="heroSection">
       <h1 class="hero-title">What's your vibe today?</h1>
-      <p class="hero-subtitle">
-        Drop your mood and let our AI curate the perfect cinematic experience that matches your energy ✨
-      </p>
+      <p class="hero-subtitle">Drop your mood and let our AI curate the perfect cinematic experience that matches your energy ✨</p>
 
-      <!-- Search Form -->
       <form class="search-form" id="searchForm">
-        <input 
-          type="text" 
-          class="search-input" 
-          id="moodInput"
-          placeholder="e.g., something dark and twisted that messes with my mind..."
-          required
-        >
-        <button type="submit" class="search-button" id="searchButton">
-          Find Movies
-        </button>
+        <input type="text" class="search-input" id="moodInput" placeholder="e.g., something dark and twisted that messes with my mind..." required />
+        <button type="submit" class="search-button" id="searchButton">Find Movies</button>
       </form>
     </div>
 
-    <!-- Trending Section -->
     <div class="trending-section" id="trendingSection">
-      <!-- <h2 class="section-title">🔥 Trending Now</h2> -->
+      <!-- optional home rows get injected -->
       <!-- <div class="trending-grid" id="trendingGrid"></div> -->
     </div>
 
-    <!-- History Section -->
-
     <div class="history-section" id="historySection">
       <h2 class="section-title">📚 Your Search History</h2>
-
       <div class="history-grid" id="historyGrid"></div>
     </div>
 
-    <!-- Mood Suggestions -->
     <div class="mood-suggestions" id="moodSuggestions">
-      <div class="suggestions-title">
-        <span>💫</span>
-        <span>Popular vibes to explore:</span>
-      </div>
+      <div class="suggestions-title"><span>💫</span><span>Popular vibes to explore:</span></div>
       <div class="suggestions-grid">
-        <button class="suggestion-button" data-mood="something that'll mess with my head and leave me questioning reality">
-          <span>Mind-bending psychological thriller</span>
-        </button>
-        <button class="suggestion-button" data-mood="aesthetic dark academia vibes with mystery">
-          <span>Dark academia mystery</span>
-        </button>
-        <button class="suggestion-button" data-mood="chaotic energy with unhinged characters">
-          <span>Chaotic energy films</span>
-        </button>
-        <button class="suggestion-button" data-mood="nostalgic 90s/2000s comfort movies">
-          <span>Y2K nostalgia comfort</span>
-        </button>
-        <button class="suggestion-button" data-mood="visually stunning sci-fi that blows my mind">
-          <span>Visually stunning sci-fi</span>
-        </button>
-        <button class="suggestion-button" data-mood="lesbian/sapphic romance that makes me cry happy tears">
-          <span>Sapphic romance tearjerker</span>
-        </button>
-        <button class="suggestion-button" data-mood="foreign films that are pure cinema">
-          <span>Foreign cinema masterpieces</span>
-        </button>
-        <button class="suggestion-button" data-mood="underground cult classics nobody talks about">
-          <span>Underground cult classics</span>
-        </button>
-        <button class="suggestion-button" data-mood="horror that's actually scary not just jumpscares">
-          <span>Actually scary horror</span>
-        </button>
-        <button class="suggestion-button" data-mood="feel-good movies that restore faith in humanity">
-          <span>Faith in humanity restored</span>
-        </button>
+        <button class="suggestion-button" data-mood="something that'll mess with my head and leave me questioning reality"><span>Mind-bending psychological thriller</span></button>
+        <button class="suggestion-button" data-mood="aesthetic dark academia vibes with mystery"><span>Dark academia mystery</span></button>
+        <button class="suggestion-button" data-mood="chaotic energy with unhinged characters"><span>Chaotic energy films</span></button>
+        <button class="suggestion-button" data-mood="nostalgic 90s/2000s comfort movies"><span>Y2K nostalgia comfort</span></button>
+        <button class="suggestion-button" data-mood="visually stunning sci-fi that blows my mind"><span>Visually stunning sci-fi</span></button>
+        <button class="suggestion-button" data-mood="lesbian/sapphic romance that makes me cry happy tears"><span>Sapphic romance tearjerker</span></button>
+        <button class="suggestion-button" data-mood="foreign films that are pure cinema"><span>Foreign cinema masterpieces</span></button>
+        <button class="suggestion-button" data-mood="underground cult classics nobody talks about"><span>Underground cult classics</span></button>
+        <button class="suggestion-button" data-mood="horror that's actually scary not just jumpscares"><span>Actually scary horror</span></button>
+        <button class="suggestion-button" data-mood="feel-good movies that restore faith in humanity"><span>Faith in humanity restored</span></button>
       </div>
     </div>
 
-    <!-- Movies Section -->
     <div class="movies-section" id="moviesSection">
       <h2 class="section-title" id="moviesTitle">Your Curated Selection</h2>
       <div class="movies-grid" id="moviesGrid"></div>
@@ -970,103 +408,117 @@
     <div class="loading-content">
       <div class="loading-spinner"></div>
       <h2 class="loading-text">Curating your perfect vibe<span id="loadingDots">...</span></h2>
-      <p class="loading-subtitle">
-        Our AI is analyzing your mood and finding movies that match your exact energy
-      </p>
-      <div class="loading-dots">
-        <div class="loading-dot"></div>
-        <div class="loading-dot"></div>
-        <div class="loading-dot"></div>
-      </div>
+      <p class="loading-subtitle">Our AI is analyzing your mood and finding movies that match your exact energy</p>
+      <div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
     </div>
   </div>
 
   <!-- Movie Modal -->
   <div class="modal" id="movieModal">
     <div class="modal-content" id="modalContent">
-      <button class="modal-close" id="modalClose">&times;</button>
-      <!-- Modal content will be populated by JavaScript -->
+      <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+      <!-- content injected -->
     </div>
   </div>
+
   <!-- Create Room Modal -->
-<div class="modal" id="createRoomModal">
-  <div class="room-modal-content">
-    <button class="modal-close" id="createRoomClose">&times;</button>
-    <div class="room-form">
-      <h2 class="room-title">Create a Watch Room</h2>
-      <p class="room-subtitle">Invite friends and vibe together in real time</p>
+  <div class="modal" id="createRoomModal">
+    <div class="room-modal-content">
+      <button class="modal-close" id="createRoomClose" aria-label="Close">&times;</button>
+      <div class="room-form">
+        <h2 class="room-title">Create a Watch Room</h2>
+        <p class="room-subtitle">Invite friends and vibe together in real time</p>
 
-      <div class="room-field">
-        <label class="room-label">Display Name</label>
-        <input type="text" id="crDisplayName" class="room-input" placeholder="e.g., Aisha" required>
-      </div>
-
-      <div class="room-field">
-        <label class="room-label">Room Name</label>
-        <input type="text" id="crRoomName" class="room-input" placeholder="e.g., Friday Scary Night" required>
-      </div>
-
-      <div class="room-field">
-        <label class="room-label">Room ID</label>
-        <div class="room-id-row">
-          <input type="text" id="crRoomId" class="room-input" readonly>
-          <button class="pill-button" id="regenRoomId">↻</button>
-          <button class="pill-button" id="copyRoomId">Copy</button>
+        <div class="room-field">
+          <label class="room-label">Display Name</label>
+          <input type="text" id="crDisplayName" class="room-input" placeholder="e.g., Aisha" required>
         </div>
-        <small class="room-hint">Share this code or use the Share button below</small>
-      </div>
 
-      <div class="room-actions">
-        <button class="primary-button" id="crJoinBtn">Join</button>
-        <button class="secondary-button" id="crShareBtn">Share</button>
-      </div>
-    </div>
-  </div>
-</div>
+        <div class="room-field">
+          <label class="room-label">Room Name</label>
+          <input type="text" id="crRoomName" class="room-input" placeholder="e.g., Friday Scary Night" required>
+        </div>
 
-<!-- Join Room Modal -->
-<div class="modal" id="joinRoomModal">
-  <div class="room-modal-content">
-    <button class="modal-close" id="joinRoomClose">&times;</button>
-    <div class="room-form">
-      <h2 class="room-title">Join a Room</h2>
-      <div class="room-field">
-        <label class="room-label">Display Name</label>
-        <input type="text" id="jrDisplayName" class="room-input" placeholder="e.g., Aisha" required>
-      </div>
-      <div class="room-field">
-        <label class="room-label">Room ID</label>
-        <input type="text" id="jrRoomId" class="room-input" placeholder="Paste the code">
-      </div>
-      <div class="room-actions">
-        <button class="primary-button" id="jrJoinBtn">Join</button>
+        <div class="room-field">
+          <label class="room-label">Room ID</label>
+          <div class="room-id-row">
+            <input type="text" id="crRoomId" class="room-input" readonly>
+            <button class="pill-button" id="regenRoomId">↻</button>
+            <button class="pill-button" id="copyRoomId">Copy</button>
+          </div>
+          <small class="room-hint" style="color:var(--text-muted)">Share this code or use the Share button below</small>
+        </div>
+
+        <div class="room-actions">
+          <button class="primary-button" id="crJoinBtn">Join</button>
+          <button class="secondary-button" id="crShareBtn">Share</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Footer -->
-<footer class="site-footer">
-  <div class="site-footer__inner">
-    <div class="site-footer__brand">© 2025 Jayesh_Mal</div>
-
-    <nav class="site-footer__links">
-      <a href="https://www.instagram.com/jayesh_cringzz/" target="_blank" rel="noopener">Instagram</a>
-      <span class="dot">•</span>
-      <a href="https://github.com/jayesh25-trade" target="_blank" rel="noopener">GitHub</a>
-    </nav>
+  <!-- Join Room Modal -->
+  <div class="modal" id="joinRoomModal">
+    <div class="room-modal-content">
+      <button class="modal-close" id="joinRoomClose" aria-label="Close">&times;</button>
+      <div class="room-form">
+        <h2 class="room-title">Join a Room</h2>
+        <div class="room-field">
+          <label class="room-label">Display Name</label>
+          <input type="text" id="jrDisplayName" class="room-input" placeholder="e.g., Aisha" required>
+        </div>
+        <div class="room-field">
+          <label class="room-label">Room ID</label>
+          <input type="text" id="jrRoomId" class="room-input" placeholder="Paste the code">
+        </div>
+        <div class="room-actions">
+          <button class="primary-button" id="jrJoinBtn">Join</button>
+        </div>
+      </div>
+    </div>
   </div>
-</footer>
 
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <div class="site-footer__brand">© 2025 Jayesh_Mal</div>
+      <nav class="site-footer__links">
+        <a href="https://www.instagram.com/jayesh_cringzz/" target="_blank" rel="noopener">Instagram</a>
+        <span class="dot">•</span>
+        <a href="https://github.com/jayesh25-trade" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+  </footer>
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+  <!-- Scripts: Firebase SDKs (load AFTER DOM) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 
-  
+  <!-- App logic -->
+  <script>
+    // keep your existing Firebase init (unchanged)
+    const firebaseConfig = {
+      apiKey: "demo-key",
+      authDomain: "cinevibe-demo.firebaseapp.com",
+      projectId: "cinevibe-demo",
+      storageBucket: "cinevibe-demo.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "demo-app-id"
+    };
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    window.firebase = {
+      db,
+      collection: firebase.firestore().collection,
+      addDoc: async (...args) => (await firebase.firestore().collection(...args)),
+      query: firebase.firestore().query,
+      orderBy: firebase.firestore().orderBy,
+      limit: firebase.firestore().limit,
+      getDocs: firebase.firestore().getDocs,
+      serverTimestamp: firebase.firestore.FieldValue.serverTimestamp
+    };
+  </script>
 
-<script src="prompt.js">
-
-</script>
-
+  <script src="./prompt.js" defer></script>
 </body>
 </html>
