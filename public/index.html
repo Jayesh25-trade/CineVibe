@@ -2,11 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+<link rel="icon" type="image/png" href="/favicon.png">
+
   <title>CineVibe - Movie Mood Curator</title>
+
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
+
   <style>
     /* ---------- Reset / Base ---------- */
     *, *::before, *::after { box-sizing: border-box; }
@@ -42,6 +48,7 @@
       --shadow-card: 0 10px 40px rgba(0, 0, 0, 0.4);
       --shadow-intense: 0 0 50px rgba(200, 50, 255, 0.5);
 
+      /* spacing scale that compresses nicely on mobile */
       --space-1: clamp(0.25rem, 1vw, 0.5rem);
       --space-2: clamp(0.5rem, 1.2vw, 0.75rem);
       --space-3: clamp(0.75rem, 1.6vw, 1rem);
@@ -51,6 +58,7 @@
       --radius-lg: 1rem;
     }
 
+    /* animated soft ambient background */
     body::before {
       content: '';
       position: fixed; inset: 0;
@@ -94,20 +102,21 @@
       display:flex; align-items:center; gap: .5rem; flex-wrap: wrap;
       justify-content: flex-end; max-width: 100%;
     }
-    .history-button, .logout-button{
+    .history-button{
       padding: .55rem .8rem; font-size: .9rem;
       background: transparent; border: 1px solid var(--border-color);
       border-radius: .6rem; color: var(--text-secondary);
       cursor: pointer; transition: all .25s ease; white-space: nowrap;
     }
-    .history-button:hover, .logout-button:hover{ border-color: var(--accent-cyan); color: var(--accent-cyan); box-shadow: 0 0 18px rgba(50,200,255,.25); }
+    .history-button:hover{ border-color: var(--accent-cyan); color: var(--accent-cyan); box-shadow: 0 0 18px rgba(50,200,255,.25); }
     #musicVolume{
       width: clamp(90px, 22vw, 140px); accent-color: hsl(280 100% 65%);
     }
 
+    /* stack actions on very small screens */
     @media (max-width: 480px){
       .nav-actions{ gap: .4rem; }
-      .history-button, .logout-button{ padding: .5rem .65rem; font-size: .85rem; }
+      .history-button{ padding: .5rem .65rem; font-size: .85rem; }
     }
 
     /* ---------- Layout ---------- */
@@ -186,6 +195,7 @@
     .trending-title{ font-weight: 600; font-size: .95rem; line-height: 1.3; display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical; overflow:hidden; margin:0 0 .25rem; }
     .trending-rating{ color: var(--accent-green); font-size: .85rem; font-weight: 600; }
 
+    /* Mood suggestions */
     .mood-suggestions{ margin-bottom: var(--space-5); animation: fadeInUp .8s ease-out .5s both; }
     .suggestions-title{ display:flex; align-items:center; justify-content:center; gap:.6rem; color: var(--text-secondary); margin-bottom: 1rem; font-weight:600; font-size: clamp(.9rem, 2.8vw, 1rem); }
     .suggestions-grid{ display:flex; flex-wrap:wrap; gap: .6rem .6rem; justify-content:center; max-width: 980px; margin: 0 auto; padding-inline: .2rem; }
@@ -201,6 +211,7 @@
     .suggestion-button:hover::before{ opacity: 1; }
     .suggestion-button span{ position: relative; z-index: 1; }
 
+    /* History */
     .history-section{ margin-bottom: var(--space-5); display:none; }
     .history-section.show{ display:block; animation: fadeInUp .6s ease-out both; }
     .history-grid{ display:grid; gap: .6rem; max-width: min(820px, 95vw); margin: 0 auto; }
@@ -213,6 +224,7 @@
     .history-mood{ font-weight: 600; color: var(--text-primary); font-size: clamp(.95rem, 2.8vw, 1rem); }
     .history-date{ color: var(--text-muted); font-size: .85rem; }
 
+    /* Movies grid */
     .movies-section{ display:none; }
     .movies-section.show{ display:block; }
     .movies-grid{
@@ -232,173 +244,247 @@
     .movie-poster{ width:100%; aspect-ratio: 2/3; object-fit: cover; display:block; position: relative; z-index:2; }
     .movie-info{ padding: .85rem .9rem; position: relative; z-index: 2; }
     .movie-title{ font-weight: 700; margin: 0 0 .35rem; line-height: 1.35; font-size: clamp(.95rem, 2.8vw, 1.05rem); }
-    .movie-rating{ color: var(--accent-green); font-size: .85rem; font-weight: 600; }
+    .movie-year{ color: var(--text-secondary); font-size: .9rem; margin: 0 0 .6rem; }
+    .movie-platforms{ display:flex; gap:.4rem; flex-wrap:wrap; }
+    .platform-badge{ padding: .25rem .5rem; background: var(--gradient-primary); color:#fff; font-size: .7rem; border-radius:.5rem; font-weight:700; }
 
-    /* Auth Modal Styles */
-    .auth-modal{
-      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);
-      display: flex; align-items: center; justify-content: center; z-index: 1000;
+    /* Loading screen */
+    .loading-screen{
+      position: fixed; inset: 0; display:none; align-items:center; justify-content:center;
+      background: color-mix(in oklab, black 70%, transparent);
+      backdrop-filter: blur(20px); z-index: 100;
+      padding: var(--space-4);
     }
-    .auth-modal.hidden{ display: none; }
-    .auth-modal-content{
-      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 1.5rem;
-      padding: 2rem; max-width: 420px; width: 90%; box-shadow: var(--shadow-card);
-      animation: slideUp .3s ease-out;
+    .loading-content{ text-align:center; animation: fadeInScale .4s ease-out both; max-width: 90vw; }
+    .loading-spinner{
+      width: clamp(64px, 20vw, 88px); height: clamp(64px, 20vw, 88px);
+      margin: 0 auto 1rem; border: 4px solid var(--border-color); border-top: 4px solid var(--primary-start);
+      border-radius: 50%; animation: spin 1s linear infinite; position: relative;
     }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .auth-title{ font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .auth-subtitle{ color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem; }
-    .auth-form{ display: flex; flex-direction: column; gap: 1rem; }
-    .auth-input{
-      background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 0.75rem;
-      padding: 0.85rem 1rem; color: var(--text-primary); font-size: 0.95rem;
-      transition: all .25s ease;
+    .loading-spinner::after{
+      content:''; position:absolute; inset: .5rem; border: 2px solid transparent; border-top: 2px solid var(--accent-cyan); border-radius:50%;
+      animation: spin .8s linear infinite reverse;
     }
-    .auth-input:focus{ outline: none; border-color: var(--primary-start); box-shadow: var(--shadow-neon); }
-    .auth-input::placeholder{ color: var(--text-muted); }
-    .auth-button{
-      background: var(--gradient-primary); color: #fff; border: none; border-radius: 0.75rem;
-      padding: 0.9rem 1.2rem; font-weight: 700; font-size: 1rem; cursor: pointer;
-      transition: all .25s ease;
+    .loading-text{ font-size: clamp(1.1rem, 3.8vw, 1.5rem); font-weight:800; margin: .25rem 0 .4rem;
+      background: var(--gradient-primary); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .loading-subtitle{ color: var(--text-secondary); max-width: 520px; margin: 0 auto; font-size: clamp(.9rem, 2.7vw, 1rem); }
+    .loading-dots{ display:flex; gap:.5rem; justify-content:center; margin-top: 1.2rem; }
+    .loading-dot{ width:.75rem; height:.75rem; border-radius:50%; background: var(--primary-start); animation: loadingDots 1.4s ease-in-out infinite; }
+    .loading-dot:nth-child(2){ animation-delay:.2s; background: var(--primary-end); }
+    .loading-dot:nth-child(3){ animation-delay:.4s; background: var(--accent-cyan); }
+
+    /* Modal (movie & room) */
+    .modal{ position: fixed; inset:0; display:none; align-items:center; justify-content:center; z-index: 200; padding: var(--space-4); background: rgba(0,0,0,.88); }
+    .modal-content{
+      background: var(--bg-card); border:1px solid var(--border-glow);
+      border-radius: 1rem; width: min(900px, 96vw); max-height: min(90vh, 100svh - 2rem);
+      overflow: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+      animation: fadeInScale .28s ease-out both; position: relative;
     }
-    .auth-button:hover{ box-shadow: var(--shadow-intense); transform: translateY(-2px); }
-    .auth-button:disabled{ opacity: 0.6; cursor: not-allowed; }
-    .auth-toggle{ text-align: center; color: var(--text-secondary); font-size: 0.9rem; margin-top: 1rem; }
-    .auth-toggle button{ background: none; border: none; color: var(--accent-cyan); cursor: pointer; font-weight: 600; }
-    .auth-toggle button:hover{ text-decoration: underline; }
-    .auth-error{ color: #ff6b6b; font-size: 0.85rem; margin-top: 0.5rem; }
+    .modal-content::-webkit-scrollbar{ display:none; }
+    .modal-close{
+      position: sticky; top: .75rem; float: right; margin: .75rem;
+      width: 2.5rem; height: 2.5rem; border-radius: 50%;
+      border: none; background: var(--bg-glass); color: var(--text-primary);
+      font-size: 1.2rem; cursor: pointer; z-index: 10; transition: background .2s ease, color .2s ease;
+    }
+    .modal-close:hover{ background: var(--primary-start); color: #fff; }
+
+    /* Create/Join room modal contents (use same backdrop) */
+    .room-modal-content{
+      background: var(--bg-card); border: 1px solid var(--border-glow);
+      border-radius: 1rem; width: min(520px, 94vw); max-height: min(92vh, 100svh - 2rem);
+      overflow:auto; -webkit-overflow-scrolling: touch; padding: 1.25rem 1.1rem 1.2rem;
+      animation: fadeInScale .25s ease-out both; position: relative;
+    }
+    .room-form{ display:flex; flex-direction:column; gap: .85rem; }
+    .room-title{ margin: .2rem 0 .2rem; font-family:'Space Grotesk',sans-serif; font-size: clamp(1.25rem, 4.5vw, 1.6rem); background: var(--gradient-primary); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .room-subtitle{ color: var(--text-secondary); margin-bottom: .4rem; font-size: .95rem; }
+    .room-field{ display:flex; flex-direction:column; gap: .45rem; }
+    .room-label{ color: var(--text-secondary); font-weight:600; font-size:.9rem; }
+    .room-input{
+      background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: .65rem;
+      color: var(--text-primary); padding: .7rem .8rem; font-size: 1rem; width: 100%;
+    }
+    .room-id-row{ display:flex; gap: .5rem; flex-wrap: wrap; }
+    .pill-button{
+      padding: .6rem .8rem; border-radius: .6rem; border:1px solid var(--border-color);
+      background: var(--bg-card); color: var(--text-secondary); font-weight:700; cursor:pointer; transition: all .2s ease;
+    }
+    .pill-button:hover{ border-color: var(--accent-cyan); color: var(--accent-cyan); }
+    .room-actions{ display:flex; gap: .6rem; flex-wrap:wrap; }
+    .primary-button, .secondary-button{
+      padding: .75rem 1.05rem; border-radius: .75rem; font-weight: 800; cursor:pointer; transition: all .25s ease;
+      border: 1px solid var(--border-color);
+    }
+    .primary-button{ background: var(--gradient-primary); color: #fff; border: none; }
+    .primary-button:hover{ transform: scale(1.03); box-shadow: var(--shadow-intense); }
+    .secondary-button{ background: transparent; color: var(--text-secondary); }
+    .secondary-button:hover{ border-color: var(--accent-cyan); color: var(--accent-cyan); box-shadow: 0 0 18px rgba(50,200,255,.25); }
 
     /* Footer */
-    .site-footer{
-      background: var(--bg-glass); border-top: 1px solid var(--border-color);
-      padding: var(--space-4); text-align: center; color: var(--text-secondary);
-      margin-top: var(--space-5);
+    .site-footer{ width:100%; background: linear-gradient(180deg, rgba(20,20,30,0) 0%, rgba(12,12,18,1) 30%); border-top: 1px solid var(--border-color); margin-top: var(--space-5); }
+    .site-footer__inner{ max-width: 1200px; margin: 0 auto; padding: 1rem var(--space-4); display:flex; align-items:center; justify-content:space-between; gap: .75rem; }
+    .site-footer__brand{ color: var(--text-primary); font-weight: 800; letter-spacing: .3px; font-size: clamp(.95rem, 3vw, 1rem); }
+    .site-footer__links{ display:flex; align-items:center; gap: .9rem; color: var(--text-secondary); font-weight:700; flex-wrap:wrap; }
+    .site-footer__links a{ color: var(--text-secondary); text-decoration:none; border-bottom:1px solid transparent; transition: color .2s ease, border-color .2s ease, transform .2s ease; }
+    .site-footer__links a:hover{ color: var(--accent-cyan); border-color: var(--accent-cyan); transform: translateY(-1px); }
+    .site-footer__links .dot{ opacity:.35; }
+    @media (max-width: 768px){
+      .site-footer__inner{ padding: .9rem var(--space-3); flex-direction: column; gap: .4rem; align-items:flex-start; }
     }
-    .site-footer__inner{ max-width: 1200px; margin: 0 auto; }
-    .site-footer__brand{ font-weight: 600; margin-bottom: 0.5rem; }
-    .site-footer__links{ display: flex; justify-content: center; gap: 0.5rem; font-size: 0.9rem; }
-    .site-footer__links a{ color: var(--accent-cyan); text-decoration: none; transition: opacity .25s ease; }
-    .site-footer__links a:hover{ opacity: 0.8; }
-    .dot{ color: var(--text-muted); }
 
-    .hidden{ display: none; }
-    .spinner{ width: 38px; height: 38px; border-radius: 50%; border: 3px solid rgba(255,255,255,.15); border-top-color: var(--primary-start); animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    /* Animations */
+    @keyframes fadeInUp{ from{ opacity:0; transform: translateY(24px) } to{ opacity:1; transform: translateY(0)} }
+    @keyframes fadeInScale{ from{ opacity:0; transform: scale(.94)} to{ opacity:1; transform: scale(1)} }
+    @keyframes spin{ to{ transform: rotate(360deg) } }
+    @keyframes loadingDots{ 0%,20%{ transform: scale(1) } 50%{ transform: scale(1.5) } 80%,100%{ transform: scale(1) } }
 
-    .modal{ position: fixed; inset: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; }
-    .modal.show{ display: flex; }
-    .modal-content{ max-width: min(900px, 92vw); max-height: 90vh; overflow: auto; border-radius: 16px; background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-card); animation: pop .18s ease; }
-    @keyframes pop { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: scale(1); } }
-    .modal-close{ position: absolute; right: 14px; top: 10px; border: 0; background: transparent; color: var(--text-secondary); font-size: 24px; cursor: pointer; }
-    .modal-close:hover{ color: var(--text-primary); }
-
-    .room-modal-content{ width: min(560px, 92vw); border-radius: 16px; background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-card); padding: 20px; animation: pop .18s ease; position: relative; }
-    .room-title{ font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 800; margin-bottom: 1rem; }
-    .room-form{ display: grid; gap: 1rem; }
-    .room-field{ display: flex; flex-direction: column; gap: 0.5rem; }
-    .room-label{ font-weight: 600; color: var(--text-primary); font-size: 0.9rem; }
-    .room-input{ background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 0.75rem 1rem; color: var(--text-primary); font-size: 0.9rem; }
-    .room-input:focus{ outline: none; border-color: var(--primary-start); }
-    .room-hint{ display: block; color: var(--text-muted); font-size: 0.85rem; }
-    .room-id-row{ display: flex; gap: 0.5rem; }
-    .room-id-row input{ flex: 1; }
-    .pill-button{ padding: 0.6rem 1rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 2rem; color: var(--text-secondary); cursor: pointer; transition: all .25s ease; }
-    .pill-button:hover{ border-color: var(--accent-cyan); color: var(--accent-cyan); }
-    .room-actions{ display: flex; gap: 0.75rem; }
-    .primary-button{ flex: 1; padding: 0.8rem 1rem; background: var(--gradient-primary); color: #fff; border: none; border-radius: 0.75rem; font-weight: 700; cursor: pointer; transition: all .25s ease; }
-    .primary-button:hover{ box-shadow: var(--shadow-intense); }
-    .secondary-button{ flex: 1; padding: 0.8rem 1rem; background: transparent; color: var(--accent-cyan); border: 1px solid var(--accent-cyan); border-radius: 0.75rem; font-weight: 700; cursor: pointer; transition: all .25s ease; }
-    .secondary-button:hover{ background: rgba(50, 200, 255, 0.1); }
-
-    @media (max-width: 720px){
-      .movie-poster, .trending-poster{ height: 220px; }
+    /* Small device fine-tuning */
+    @media (max-width: 400px){
+      .suggestions-grid{ gap: .5rem; }
+      .suggestion-button{ padding: .55rem .8rem; }
     }
   </style>
 </head>
 <body>
-  <!-- Auth Modal - shown on page load if not logged in -->
-  <div class="auth-modal" id="authModal">
-    <div class="auth-modal-content">
-      <h2 class="auth-title" id="authTitle">Sign In</h2>
-      <p class="auth-subtitle">Welcome to CineVibe - Find your perfect movie vibe</p>
-      <form class="auth-form" id="authForm">
-        <input type="email" class="auth-input" id="authEmail" placeholder="Email" required>
-        <input type="password" class="auth-input" id="authPassword" placeholder="Password" required>
-        <button type="submit" class="auth-button" id="authSubmit">Sign In</button>
-        <div class="auth-error" id="authError"></div>
-      </form>
-      <div class="auth-toggle">
-        <span id="authToggleText">Don't have an account?</span>
-        <button type="button" id="authToggleBtn">Sign Up</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Navbar -->
+  <!-- Navigation -->
   <nav class="navbar">
     <div class="logo" id="logoHome">
-      <div class="logo-icon">🎬</div>
+      <div class="logo-icon">C</div>
       <div class="logo-text">CineVibe</div>
     </div>
     <div class="nav-actions">
-      <button class="history-button" id="historyToggle">Search History</button>
-      <input type="range" id="musicVolume" min="0" max="100" value="50">
-      <button class="logout-button" id="logoutBtn">Logout</button>
+      <button class="history-button" id="historyToggle">📚 History</button>
+      <button class="history-button" id="shuffleBtn">🔀 Shuffle 50</button>
+      <button class="history-button" id="musicToggle">🔇 Music: Off</button>
+      <input id="musicVolume" type="range" min="0" max="1" step="0.01" value="0.25" />
     </div>
   </nav>
 
   <!-- Main Content -->
   <div class="container">
-    <!-- Hero Section -->
-    <section class="hero-section" id="heroSection">
-      <h1 class="hero-title">Find Your Vibe</h1>
-      <p class="hero-subtitle">Discover movies that match your mood. Tell us how you're feeling, and we'll find the perfect film for you.</p>
-    </section>
+    <div class="hero-section" id="heroSection">
+      <h1 class="hero-title">What's your vibe today?</h1>
+      <p class="hero-subtitle">Drop your mood and let our AI curate the perfect cinematic experience that matches your energy ✨</p>
 
-    <!-- Search Form -->
-    <form class="search-form" id="searchForm">
-      <input type="text" class="search-input" id="moodInput" placeholder="What's your mood? (e.g., 'feeling adventurous', 'need a laugh')" required>
-      <button type="submit" class="search-button" id="searchButton">Search</button>
-    </form>
-
-    <!-- Mood Suggestions -->
-    <div class="mood-suggestions" id="moodSuggestions">
-      <div class="suggestions-title">
-        <span>✨ Try a mood:</span>
-      </div>
-      <div class="suggestions-grid" id="suggestionsGrid"></div>
+      <form class="search-form" id="searchForm">
+        <input type="text" class="search-input" id="moodInput" placeholder="e.g., something dark and twisted that messes with my mind..." required />
+        <button type="submit" class="search-button" id="searchButton">Find Movies</button>
+      </form>
     </div>
 
-    <!-- Trending Section -->
-    <section class="trending-section" id="trendingSection">
-      <h2 class="section-title">Trending Now</h2>
-      <div class="trending-grid" id="trendingGrid"></div>
-    </section>
+    <div class="trending-section" id="trendingSection">
+      <!-- optional home rows get injected -->
+      <!-- <div class="trending-grid" id="trendingGrid"></div> -->
+    </div>
 
-    <!-- History Section -->
-    <section class="history-section" id="historySection">
-      <h2 class="section-title">Your Search History</h2>
+    <div class="history-section" id="historySection">
+      <h2 class="section-title">📚 Your Search History</h2>
       <div class="history-grid" id="historyGrid"></div>
-    </section>
+    </div>
 
-    <!-- Movies Section -->
-    <section class="movies-section" id="moviesSection">
-      <h2 class="section-title" id="moviesTitle">Movies for Your Mood</h2>
+    <div class="mood-suggestions" id="moodSuggestions">
+      <div class="suggestions-title"><span>💫</span><span>Popular vibes to explore:</span></div>
+      <div class="suggestions-grid">
+        <button class="suggestion-button" data-mood="something that'll mess with my head and leave me questioning reality"><span>Mind-bending psychological thriller</span></button>
+        <button class="suggestion-button" data-mood="aesthetic dark academia vibes with mystery"><span>Dark academia mystery</span></button>
+        <button class="suggestion-button" data-mood="chaotic energy with unhinged characters"><span>Chaotic energy films</span></button>
+        <button class="suggestion-button" data-mood="nostalgic 90s/2000s comfort movies"><span>Y2K nostalgia comfort</span></button>
+        <button class="suggestion-button" data-mood="visually stunning sci-fi that blows my mind"><span>Visually stunning sci-fi</span></button>
+        <button class="suggestion-button" data-mood="lesbian/sapphic romance that makes me cry happy tears"><span>Sapphic romance tearjerker</span></button>
+        <button class="suggestion-button" data-mood="foreign films that are pure cinema"><span>Foreign cinema masterpieces</span></button>
+        <button class="suggestion-button" data-mood="underground cult classics nobody talks about"><span>Underground cult classics</span></button>
+        <button class="suggestion-button" data-mood="horror that's actually scary not just jumpscares"><span>Actually scary horror</span></button>
+        <button class="suggestion-button" data-mood="feel-good movies that restore faith in humanity"><span>Faith in humanity restored</span></button>
+      </div>
+    </div>
+
+    <div class="movies-section" id="moviesSection">
+      <h2 class="section-title" id="moviesTitle">Your Curated Selection</h2>
       <div class="movies-grid" id="moviesGrid"></div>
-    </section>
+    </div>
+  </div>
+
+  <!-- Loading Screen -->
+  <div class="loading-screen" id="loadingScreen">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <h2 class="loading-text">Curating your perfect vibe<span id="loadingDots">...</span></h2>
+      <p class="loading-subtitle">Our AI is analyzing your mood and finding movies that match your exact energy</p>
+      <div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
+    </div>
   </div>
 
   <!-- Movie Modal -->
   <div class="modal" id="movieModal">
-    <div class="modal-content" id="movieModalContent">
-      <button class="modal-close" id="modalClose">&times;</button>
+    <div class="modal-content" id="modalContent">
+      <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+      <!-- content injected -->
+    </div>
+  </div>
+
+  <!-- Create Room Modal -->
+  <div class="modal" id="createRoomModal">
+    <div class="room-modal-content">
+      <button class="modal-close" id="createRoomClose" aria-label="Close">&times;</button>
+      <div class="room-form">
+        <h2 class="room-title">Create a Watch Room</h2>
+        <p class="room-subtitle">Invite friends and vibe together in real time</p>
+
+        <div class="room-field">
+          <label class="room-label">Display Name</label>
+          <input type="text" id="crDisplayName" class="room-input" placeholder="e.g., Aisha" required>
+        </div>
+
+        <div class="room-field">
+          <label class="room-label">Room Name</label>
+          <input type="text" id="crRoomName" class="room-input" placeholder="e.g., Friday Scary Night" required>
+        </div>
+
+        <div class="room-field">
+          <label class="room-label">Room ID</label>
+          <div class="room-id-row">
+            <input type="text" id="crRoomId" class="room-input" readonly>
+            <button class="pill-button" id="regenRoomId">↻</button>
+            <button class="pill-button" id="copyRoomId">Copy</button>
+          </div>
+          <small class="room-hint" style="color:var(--text-muted)">Share this code or use the Share button below</small>
+        </div>
+
+        <div class="room-actions">
+          <button class="primary-button" id="crJoinBtn">Join</button>
+          <button class="secondary-button" id="crShareBtn">Share</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Join Room Modal -->
+  <div class="modal" id="joinRoomModal">
+    <div class="room-modal-content">
+      <button class="modal-close" id="joinRoomClose" aria-label="Close">&times;</button>
+      <div class="room-form">
+        <h2 class="room-title">Join a Room</h2>
+        <div class="room-field">
+          <label class="room-label">Display Name</label>
+          <input type="text" id="jrDisplayName" class="room-input" placeholder="e.g., Aisha" required>
+        </div>
+        <div class="room-field">
+          <label class="room-label">Room ID</label>
+          <input type="text" id="jrRoomId" class="room-input" placeholder="Paste the code">
+        </div>
+        <div class="room-actions">
+          <button class="primary-button" id="jrJoinBtn">Join</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- Footer -->
   <footer class="site-footer">
     <div class="site-footer__inner">
-      <div class="site-footer__brand">© 2025 CineVibe</div>
+      <div class="site-footer__brand">© 2025 Jayesh_Mal</div>
       <nav class="site-footer__links">
         <a href="https://www.instagram.com/jayesh_cringzz/" target="_blank" rel="noopener">Instagram</a>
         <span class="dot">•</span>
@@ -407,340 +493,35 @@
     </div>
   </footer>
 
-  <!-- Supabase JS SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Scripts: Firebase SDKs (load AFTER DOM) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 
-  <!-- Main App Script -->
+  <!-- App logic -->
   <script>
-    'use strict';
-
-    const SUPABASE_URL = 'https://ipaduwfqyapuqhvvicqm.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwYWR1d2ZxeWFwdXFodnZpY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNzk4NTEsImV4cCI6MjA3Njk1NTg1MX0.Gr8n1k-q3IT8IYvIrM4lH8CVGQOsRKkvSXM01TF5ibk';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // Utilities
-    const $ = (id) => document.getElementById(id);
-    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
-    const toast = (msg) => {
-      const el = document.createElement('div');
-      Object.assign(el.style, {
-        position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: '24px',
-        background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '10px 14px',
-        borderRadius: '12px', fontFamily: 'system-ui,sans-serif', fontSize: '14px',
-        zIndex: 99999, opacity: '0', transition: 'opacity 200ms ease'
-      });
-      el.textContent = msg;
-      document.body.appendChild(el);
-      requestAnimationFrame(() => { el.style.opacity = '1'; });
-      setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 240); }, 1800);
+    // keep your existing Firebase init (unchanged)
+    const firebaseConfig = {
+      apiKey: "demo-key",
+      authDomain: "cinevibe-demo.firebaseapp.com",
+      projectId: "cinevibe-demo",
+      storageBucket: "cinevibe-demo.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "demo-app-id"
     };
-
-    // State
-    let isLoading = false;
-    let currentUser = null;
-    let isSignUpMode = false;
-    let currentMovies = [];
-
-    // DOM Elements
-    const authModal = $('authModal');
-    const authForm = $('authForm');
-    const authEmail = $('authEmail');
-    const authPassword = $('authPassword');
-    const authSubmit = $('authSubmit');
-    const authTitle = $('authTitle');
-    const authToggleBtn = $('authToggleBtn');
-    const authToggleText = $('authToggleText');
-    const authError = $('authError');
-    const logoutBtn = $('logoutBtn');
-    const searchForm = $('searchForm');
-    const moodInput = $('moodInput');
-    const searchButton = $('searchButton');
-    const moviesGrid = $('moviesGrid');
-    const moviesSection = $('moviesSection');
-    const moviesTitle = $('moviesTitle');
-    const movieModal = $('movieModal');
-    const modalClose = $('modalClose');
-    const historyToggle = $('historyToggle');
-    const historySection = $('historySection');
-    const historyGrid = $('historyGrid');
-    const trendingSection = $('trendingSection');
-    const trendingGrid = $('trendingGrid');
-    const moodSuggestions = $('moodSuggestions');
-    const suggestionsGrid = $('suggestionsGrid');
-    const logoHome = $('logoHome');
-    const heroSection = $('heroSection');
-
-    const API_BASE_URL = 'https://cinevibe-movie.onrender.com/api';
-
-    async function initAuth() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        currentUser = session.user;
-        showApp();
-      } else {
-        showAuthModal();
-      }
-
-      supabase.auth.onAuthStateChange((event, session) => {
-        if (session?.user) {
-          currentUser = session.user;
-          showApp();
-        } else {
-          currentUser = null;
-          showAuthModal();
-        }
-      });
-    }
-
-    function showAuthModal() {
-      authModal.classList.remove('hidden');
-      searchForm.style.display = 'none';
-      moodSuggestions.style.display = 'none';
-      trendingSection.style.display = 'none';
-      historySection.style.display = 'none';
-      moviesSection.classList.remove('show');
-    }
-
-    function showApp() {
-      authModal.classList.add('hidden');
-      searchForm.style.display = 'block';
-      moodSuggestions.style.display = 'block';
-      trendingSection.style.display = 'block';
-      loadTrendingMovies();
-      loadSearchHistory();
-    }
-
-    async function handleAuthSubmit(e) {
-      e.preventDefault();
-      authError.textContent = '';
-      authSubmit.disabled = true;
-      authSubmit.textContent = 'Loading...';
-
-      const email = authEmail.value.trim();
-      const password = authPassword.value.trim();
-
-      if (!email || !password) {
-        authError.textContent = 'Please fill in all fields';
-        authSubmit.disabled = false;
-        authSubmit.textContent = isSignUpMode ? 'Sign Up' : 'Sign In';
-        return;
-      }
-
-      try {
-        if (isSignUpMode) {
-          const { error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: { emailRedirectTo: window.location.origin }
-          });
-          if (error) throw error;
-          toast('Account created! Check your email to confirm.');
-          authEmail.value = '';
-          authPassword.value = '';
-        } else {
-          const { error } = await supabase.auth.signInWithPassword({ email, password });
-          if (error) throw error;
-          toast('Welcome back! 🎬');
-        }
-      } catch (error) {
-        authError.textContent = error.message || 'Authentication failed';
-      } finally {
-        authSubmit.disabled = false;
-        authSubmit.textContent = isSignUpMode ? 'Sign Up' : 'Sign In';
-      }
-    }
-
-    function toggleAuthMode() {
-      isSignUpMode = !isSignUpMode;
-      authTitle.textContent = isSignUpMode ? 'Sign Up' : 'Sign In';
-      authSubmit.textContent = isSignUpMode ? 'Sign Up' : 'Sign In';
-      authToggleText.textContent = isSignUpMode ? 'Already have an account?' : "Don't have an account?";
-      authToggleBtn.textContent = isSignUpMode ? 'Sign In' : 'Sign Up';
-      authError.textContent = '';
-    }
-
-    async function handleLogout() {
-      await supabase.auth.signOut();
-      toast('Signed out successfully');
-      authEmail.value = '';
-      authPassword.value = '';
-      authError.textContent = '';
-      isSignUpMode = false;
-    }
-
-    // Movie Functions
-    async function fetchJSON(url, options = {}) {
-      try {
-        const res = await fetch(url, options);
-        if (!res.ok) throw new Error(`Request failed (${res.status})`);
-        return await res.json();
-      } catch (error) {
-        console.error('Fetch error:', error);
-        return null;
-      }
-    }
-
-    async function searchMovies(mood) {
-      if (isLoading) return;
-      isLoading = true;
-      searchButton.disabled = true;
-      searchButton.textContent = 'Searching...';
-
-      try {
-        const data = await fetchJSON(`${API_BASE_URL}/recommend`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mood })
-        });
-
-        if (data?.movies) {
-          currentMovies = data.movies;
-          displayMovies(currentMovies);
-          saveSearchHistory(mood);
-          moviesSection.classList.add('show');
-          moviesTitle.textContent = `Movies for "${mood}"`;
-        } else {
-          toast('No movies found. Try a different mood!');
-        }
-      } catch (error) {
-        toast('Error searching movies');
-        console.error(error);
-      } finally {
-        isLoading = false;
-        searchButton.disabled = false;
-        searchButton.textContent = 'Search';
-      }
-    }
-
-    function displayMovies(movies) {
-      moviesGrid.innerHTML = '';
-      movies.forEach(movie => {
-        const card = document.createElement('div');
-        card.className = 'movie-card';
-        card.innerHTML = `
-          <img src="${movie.poster || '/placeholder.svg'}" alt="${movie.title}" class="movie-poster">
-          <div class="movie-info">
-            <h3 class="movie-title">${movie.title}</h3>
-            <p class="movie-rating">⭐ ${movie.rating?.toFixed(1) || 'N/A'}</p>
-          </div>
-        `;
-        card.addEventListener('click', () => showMovieModal(movie));
-        moviesGrid.appendChild(card);
-      });
-    }
-
-    function showMovieModal(movie) {
-      const content = $('movieModalContent');
-      content.innerHTML = `
-        <button class="modal-close" id="modalClose">&times;</button>
-        <div style="padding: 20px;">
-          <img src="${movie.poster || '/placeholder.svg'}" alt="${movie.title}" style="width: 100%; max-width: 300px; border-radius: 12px; margin-bottom: 20px;">
-          <h2 style="margin: 0 0 10px; font-family: 'Space Grotesk', sans-serif;">${movie.title}</h2>
-          <p style="color: var(--text-secondary); margin: 0 0 15px;">${movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : 'N/A'}</p>
-          <p style="color: var(--accent-green); font-weight: 600; margin: 0 0 15px;">⭐ ${movie.rating?.toFixed(1) || 'N/A'}/10</p>
-          <p style="color: var(--text-secondary); line-height: 1.6; margin: 0 0 20px;">${movie.overview || 'No description available'}</p>
-          ${movie.trailerUrl ? `<a href="${movie.trailerUrl}" target="_blank" style="color: var(--accent-cyan); text-decoration: none; font-weight: 600;">Watch Trailer →</a>` : ''}
-        </div>
-      `;
-      movieModal.classList.add('show');
-      const newClose = $('modalClose');
-      if (newClose) newClose.addEventListener('click', () => movieModal.classList.remove('show'));
-    }
-
-    async function loadTrendingMovies() {
-      try {
-        const data = await fetchJSON(`${API_BASE_URL}/trending`);
-        if (data?.movies) {
-          trendingGrid.innerHTML = '';
-          data.movies.slice(0, 8).forEach(movie => {
-            const card = document.createElement('div');
-            card.className = 'trending-card';
-            card.innerHTML = `
-              <img src="${movie.poster || '/placeholder.svg'}" alt="${movie.title}" class="trending-poster">
-              <div class="trending-info">
-                <h3 class="trending-title">${movie.title}</h3>
-                <p class="trending-rating">⭐ ${movie.rating?.toFixed(1) || 'N/A'}</p>
-              </div>
-            `;
-            card.addEventListener('click', () => showMovieModal(movie));
-            trendingGrid.appendChild(card);
-          });
-        }
-      } catch (error) {
-        console.error('Error loading trending:', error);
-      }
-    }
-
-    function saveSearchHistory(mood) {
-      const history = JSON.parse(localStorage.getItem('cinevibe_history') || '[]');
-      history.unshift({ mood, date: new Date().toISOString() });
-      localStorage.setItem('cinevibe_history', JSON.stringify(history.slice(0, 20)));
-    }
-
-    function loadSearchHistory() {
-      const history = JSON.parse(localStorage.getItem('cinevibe_history') || '[]');
-      if (history.length === 0) {
-        historyGrid.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No search history yet</p>';
-        return;
-      }
-      historyGrid.innerHTML = '';
-      history.forEach(item => {
-        const el = document.createElement('div');
-        el.className = 'history-item';
-        const date = new Date(item.date).toLocaleDateString();
-        el.innerHTML = `<span class="history-mood">${item.mood}</span><span class="history-date">${date}</span>`;
-        el.addEventListener('click', () => {
-          moodInput.value = item.mood;
-          searchMovies(item.mood);
-        });
-        historyGrid.appendChild(el);
-      });
-    }
-
-    // Mood Suggestions
-    const moods = ['Adventurous', 'Romantic', 'Thrilling', 'Funny', 'Mysterious', 'Inspiring', 'Relaxing', 'Intense'];
-    function loadMoodSuggestions() {
-      suggestionsGrid.innerHTML = '';
-      moods.forEach(mood => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'suggestion-button';
-        btn.innerHTML = `<span>${mood}</span>`;
-        btn.addEventListener('click', (e) => {
-          e.preventDefault();
-          moodInput.value = mood;
-          searchMovies(mood);
-        });
-        suggestionsGrid.appendChild(btn);
-      });
-    }
-
-    // Event Listeners
-    authForm.addEventListener('submit', handleAuthSubmit);
-    authToggleBtn.addEventListener('click', toggleAuthMode);
-    logoutBtn.addEventListener('click', handleLogout);
-    searchForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const mood = moodInput.value.trim();
-      if (mood) searchMovies(mood);
-    });
-    modalClose.addEventListener('click', () => movieModal.classList.remove('show'));
-    movieModal.addEventListener('click', (e) => {
-      if (e.target === movieModal) movieModal.classList.remove('show');
-    });
-    historyToggle.addEventListener('click', () => {
-      historySection.classList.toggle('show');
-      if (historySection.classList.contains('show')) loadSearchHistory();
-    });
-    logoHome.addEventListener('click', () => window.location.reload());
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-      loadMoodSuggestions();
-      initAuth();
-    });
-
-    console.log('🎬 CineVibe loaded! Ready to find your perfect vibe.');
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    window.firebase = {
+      db,
+      collection: firebase.firestore().collection,
+      addDoc: async (...args) => (await firebase.firestore().collection(...args)),
+      query: firebase.firestore().query,
+      orderBy: firebase.firestore().orderBy,
+      limit: firebase.firestore().limit,
+      getDocs: firebase.firestore().getDocs,
+      serverTimestamp: firebase.firestore.FieldValue.serverTimestamp
+    };
   </script>
+
+  <script src="./prompt.js" defer></script>
 </body>
 </html>
