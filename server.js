@@ -17,13 +17,6 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// -------------------- Supabase (client-side / auth verification) --------------------
-// NOTE: You provided these in the client. They are reused here for token verification.
-// If you have a service_role key and want to perform server-side inserts without RLS,
-// replace SUPABASE_ANON_KEY with that service role key (keep it secret).
-const SUPABASE_URL = process.env.SUPABASE_URL || "https://ipaduwfqyapuqhvvicqm.supabase.co";
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwYWR1d2ZxeWFwdXFodnZpY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNzk4NTEsImV4cCI6MjA3Njk1NTg1MX0.Gr8n1k-q3IT8IYvIrM4lH8CVGQOsRKkvSXM01TF5ibk";
-
 // -------------------- Keys --------------------
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
 const TMDB_API_KEY = process.env.TMDB_API_KEY || "";          // v3 key (optional fallback)
@@ -37,8 +30,8 @@ app.use(
       "http://localhost:3000",
       "http://localhost:5000",
       "http://127.0.0.1:5500",
-      "https://cinevibe-movie.onrender.com",
-      // add any other allowed origins for your frontend here
+      "https://cinevibe-movie.onrender.com"
+      // "https://cinevibe-frontend.netlify.app",
     ],
     credentials: true,
   })
@@ -406,76 +399,13 @@ async function getMovieRecommendations(mood) {
   return valid;
 }
 
-// -------------------- Supabase helpers (auth verification + recording) --------------------
-
-/**
- * Verify a Supabase access token by calling Supabase Auth endpoint.
- * Expects Authorization header "Bearer <token>" from client.
- * Returns user object on success, or null on failure.
- */
-async function verifySupabaseToken(token) {
-  if (!token) return null;
-  try {
-    const res = await axiosWithRetry(() =>
-      axios.get(`${SUPABASE_URL}/auth/v1/user`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          apikey: SUPABASE_ANON_KEY,
-        },
-        httpsAgent,
-      })
-    );
-    // Success returns user object
-    return res.data || null;
-  } catch (err) {
-    // Unauthorized or invalid token
-    return null;
-  }
-}
-
-/**
- * Try to record a search into Supabase table `search_history` via REST.
- * This will use the anon key and will succeed only if your DB/policies permit it.
- * We don't fail the main request if recording fails — it's best-effort.
- */
-async function recordSearchToSupabase({ user_id = null, mood = '', ip = null }) {
-  if (!mood) return false;
-  // Build row
-  const row = {
-    user_id: user_id || null,
-    mood: String(mood).slice(0, 500),
-    searched_at: new Date().toISOString(),
-    ip: ip || null,
-  };
-
-  try {
-    const res = await axiosWithRetry(() =>
-      axios.post(`${SUPABASE_URL}/rest/v1/search_history`, row, {
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`, // using anon key for auth to REST; replace with service role if needed
-          "Content-Type": "application/json",
-          Prefer: "return=representation",
-        },
-        httpsAgent,
-      })
-    );
-    // If insert succeeded, return true
-    return res.status >= 200 && res.status < 300;
-  } catch (err) {
-    // Log but don't crash the flow
-    console.warn("Failed to record search to Supabase (best-effort):", err?.response?.data || err?.message || err);
-    return false;
-  }
-}
-
 // -------------------- Routes --------------------
 app.get("/api/health", (req, res) => {
   res.json({
     status: "healthy",
     timestamp: new Date().toISOString(),
     version: "2.2.0",
-    features: ["recommendations", "trending", "detailed-info", "more-like-this", "supabase-auth"],
+    features: ["recommendations", "trending", "detailed-info", "more-like-this"],
   });
 });
 
@@ -493,41 +423,16 @@ app.get("/api/trending", async (req, res) => {
   }
 });
 
-/**
- * POST /api/recommend
- * Requires Authorization: Bearer <supabase_access_token>
- * Body: { mood: "..." }
- */
 app.post("/api/recommend", async (req, res) => {
   try {
     const mood = String(req.body?.mood || "").trim();
     if (!mood) return res.status(400).json({ success: false, error: "Mood is required and must be non-empty" });
     if (mood.length > 500) return res.status(400).json({ success: false, error: "Mood too long (max 500 chars)" });
 
-    // Expect Authorization header: Bearer <supabase_access_token>
-    const authHeader = (req.headers['authorization'] || req.headers['Authorization'] || '').toString();
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
-
-    const user = await verifySupabaseToken(token);
-    if (!user) {
-      return res.status(401).json({ success: false, error: "Unauthorized - valid Supabase session token required" });
-    }
-
     const start = Date.now();
     const movies = await getMovieRecommendations(mood);
-
-    // Best-effort: record into Supabase search_history
-    try {
-      const ip = req.ip || req.headers['x-forwarded-for'] || null;
-      await recordSearchToSupabase({ user_id: user.id || user?.aud || user?.email || null, mood, ip });
-    } catch (e) {
-      // ignore - already handled inside helper
-      console.warn("recordSearchToSupabase error:", e);
-    }
-
     res.json({ success: true, mood, count: movies.length, movies, processingTime: Date.now() - start });
   } catch (error) {
-    console.error("recommend error:", error?.message || error);
     const msg = /openai/i.test(String(error?.message)) ? "AI service temporarily unavailable" : "Internal server error";
     const code = /openai/i.test(String(error?.message)) ? 502 : 500;
     res.status(code).json({ success: false, error: msg });
@@ -578,7 +483,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// -------- Extras (unchanged but available) --------
+// -------- Extras (unchanged) --------
 app.get("/api/trending/all", async (req, res) => {
   try {
     const t = await tmdb("/trending/movie/week");
@@ -657,7 +562,6 @@ app.get("/api/room/join/:id", (req, res) => {
 
 // -------------------- Error handlers --------------------
 app.use((err, req, res, next) => {
-  console.error("Unhandled error:", err);
   res.status(500).json({ success: false, error: "Internal server error" });
 });
 
@@ -671,7 +575,7 @@ app.use((req, res) => {
       "GET /api/trending/all",
       "GET /api/now-playing",
       "GET /api/upcoming",
-      "POST /api/recommend (requires Supabase Authorization header)",
+      "POST /api/recommend",
       "GET /api/movie/:title",
       "GET /api/details/:id",
       "GET /api/recommendations/:id",
@@ -689,7 +593,7 @@ app.listen(PORT, () => {
   console.log(`🌍 Trending (All):    GET /api/trending/all`);
   console.log(`🎟️  Now Playing:      GET /api/now-playing`);
   console.log(`⏳ Upcoming:          GET /api/upcoming`);
-  console.log(`🎯 Recommendations:   POST /api/recommend (requires Supabase Bearer token)`);
+  console.log(`🎯 Recommendations:   POST /api/recommend`);
   console.log(`🔍 Movie search:      GET /api/movie/:title`);
   console.log(`📄 Details by ID:     GET /api/details/:id`);
   console.log(`➕ More Like This:    GET /api/recommendations/:id`);
