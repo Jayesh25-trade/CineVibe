@@ -2,9 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>CineVibe - Movie Mood Curator</title>
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
@@ -51,6 +55,7 @@
       --radius-lg: 1rem;
     }
 
+    /* animated soft ambient background */
     body::before {
       content: '';
       position: fixed; inset: 0;
@@ -264,7 +269,7 @@
     .loading-dot:nth-child(2){ animation-delay:.2s; background: var(--primary-end); }
     .loading-dot:nth-child(3){ animation-delay:.4s; background: var(--accent-cyan); }
 
-    /* Modal */
+    /* Modal (movie & room) */
     .modal{ position: fixed; inset:0; display:none; align-items:center; justify-content:center; z-index: 200; padding: var(--space-4); background: rgba(0,0,0,.88); }
     .modal-content{
       background: var(--bg-card); border:1px solid var(--border-glow);
@@ -281,52 +286,37 @@
     }
     .modal-close:hover{ background: var(--primary-start); color: #fff; }
 
-    /* Auth Modal */
-    .auth-modal-content{
+    /* Create/Join room modal contents (use same backdrop) */
+    .room-modal-content{
       background: var(--bg-card); border: 1px solid var(--border-glow);
-      border-radius: 1rem; width: min(480px, 94vw); max-height: min(92vh, 100svh - 2rem);
-      overflow:auto; padding: 2rem 1.5rem;
+      border-radius: 1rem; width: min(520px, 94vw); max-height: min(92vh, 100svh - 2rem);
+      overflow:auto; -webkit-overflow-scrolling: touch; padding: 1.25rem 1.1rem 1.2rem;
       animation: fadeInScale .25s ease-out both; position: relative;
     }
-    .auth-title{ 
-      margin: 1rem 0 .5rem; 
-      font-family:'Space Grotesk',sans-serif; 
-      font-size: clamp(1.5rem, 4.5vw, 2rem); 
-      text-align: center;
-      background: var(--gradient-primary); 
-      -webkit-background-clip:text; 
-      -webkit-text-fill-color:transparent; 
-      background-clip:text; 
-    }
-    .auth-subtitle{ 
-      color: var(--text-secondary); 
-      margin-bottom: 1.5rem; 
-      font-size: .95rem; 
-      text-align: center;
-    }
-    .auth-form{ display:flex; flex-direction:column; gap: 1rem; }
-    .auth-field{ display:flex; flex-direction:column; gap: .45rem; }
-    .auth-label{ color: var(--text-secondary); font-weight:600; font-size:.9rem; }
-    .auth-input{
+    .room-form{ display:flex; flex-direction:column; gap: .85rem; }
+    .room-title{ margin: .2rem 0 .2rem; font-family:'Space Grotesk',sans-serif; font-size: clamp(1.25rem, 4.5vw, 1.6rem); background: var(--gradient-primary); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .room-subtitle{ color: var(--text-secondary); margin-bottom: .4rem; font-size: .95rem; }
+    .room-field{ display:flex; flex-direction:column; gap: .45rem; }
+    .room-label{ color: var(--text-secondary); font-weight:600; font-size:.9rem; }
+    .room-input{
       background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: .65rem;
-      color: var(--text-primary); padding: .85rem .9rem; font-size: 1rem; width: 100%;
-      transition: all .25s ease;
+      color: var(--text-primary); padding: .7rem .8rem; font-size: 1rem; width: 100%;
     }
-    .auth-input:focus{ outline:none; border-color: var(--primary-start); box-shadow: var(--shadow-neon); }
-    .auth-button{
-      padding: .85rem 1.1rem; border-radius: .75rem; font-weight: 800; cursor:pointer; 
-      transition: all .25s ease; border: none;
-      background: var(--gradient-primary); color: #fff;
+    .room-id-row{ display:flex; gap: .5rem; flex-wrap: wrap; }
+    .pill-button{
+      padding: .6rem .8rem; border-radius: .6rem; border:1px solid var(--border-color);
+      background: var(--bg-card); color: var(--text-secondary); font-weight:700; cursor:pointer; transition: all .2s ease;
     }
-    .auth-button:hover{ transform: scale(1.03); box-shadow: var(--shadow-intense); }
-    .auth-button:disabled{ opacity:.6; cursor:not-allowed; transform: scale(1); }
-    .auth-toggle{
-      text-align: center; margin-top: 1rem; color: var(--text-secondary); font-size: .9rem;
+    .pill-button:hover{ border-color: var(--accent-cyan); color: var(--accent-cyan); }
+    .room-actions{ display:flex; gap: .6rem; flex-wrap:wrap; }
+    .primary-button, .secondary-button{
+      padding: .75rem 1.05rem; border-radius: .75rem; font-weight: 800; cursor:pointer; transition: all .25s ease;
+      border: 1px solid var(--border-color);
     }
-    .auth-toggle button{
-      background: none; border: none; color: var(--accent-cyan); cursor: pointer;
-      text-decoration: underline; font-weight: 600;
-    }
+    .primary-button{ background: var(--gradient-primary); color: #fff; border: none; }
+    .primary-button:hover{ transform: scale(1.03); box-shadow: var(--shadow-intense); }
+    .secondary-button{ background: transparent; color: var(--text-secondary); }
+    .secondary-button:hover{ border-color: var(--accent-cyan); color: var(--accent-cyan); box-shadow: 0 0 18px rgba(50,200,255,.25); }
 
     /* Footer */
     .site-footer{ width:100%; background: linear-gradient(180deg, rgba(20,20,30,0) 0%, rgba(12,12,18,1) 30%); border-top: 1px solid var(--border-color); margin-top: var(--space-5); }
@@ -340,12 +330,30 @@
       .site-footer__inner{ padding: .9rem var(--space-3); flex-direction: column; gap: .4rem; align-items:flex-start; }
     }
 
+    /* Auth modal (new) */
+    .auth-modal {
+      position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 300;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+    }
+    .auth-panel {
+      width: min(420px, 94vw); background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid var(--border-color); padding: 1.15rem; border-radius: 12px;
+    }
+    .auth-panel h3 { margin: 0 0 .6rem; font-family:'Space Grotesk',sans-serif; font-size:1.05rem; color:var(--text-primary); }
+    .auth-field { margin-bottom: .6rem; }
+    .auth-input {
+      width: 100%; padding: .8rem .9rem; border-radius: .65rem; border:1px solid var(--border-color);
+      background:var(--bg-card); color:var(--text-primary);
+    }
+    .auth-error { color: #FF8A8A; font-size: .9rem; margin-top:.4rem; min-height: 1.1rem; }
+
     /* Animations */
     @keyframes fadeInUp{ from{ opacity:0; transform: translateY(24px) } to{ opacity:1; transform: translateY(0)} }
     @keyframes fadeInScale{ from{ opacity:0; transform: scale(.94)} to{ opacity:1; transform: scale(1)} }
     @keyframes spin{ to{ transform: rotate(360deg) } }
     @keyframes loadingDots{ 0%,20%{ transform: scale(1) } 50%{ transform: scale(1.5) } 80%,100%{ transform: scale(1) } }
 
+    /* Small device fine-tuning */
     @media (max-width: 400px){
       .suggestions-grid{ gap: .5rem; }
       .suggestion-button{ padding: .55rem .8rem; }
@@ -360,11 +368,11 @@
       <div class="logo-text">CineVibe</div>
     </div>
     <div class="nav-actions">
-      <button class="history-button" id="historyToggle" style="display:none;">📚 History</button>
+      <button class="history-button" id="historyToggle">📚 History</button>
       <button class="history-button" id="shuffleBtn">🔀 Shuffle 50</button>
       <button class="history-button" id="musicToggle">🔇 Music: Off</button>
       <input id="musicVolume" type="range" min="0" max="1" step="0.01" value="0.25" />
-      <button class="history-button" id="authButton">Sign In</button>
+      <button class="history-button" id="authStateBtn">🔐 Sign In</button>
     </div>
   </nav>
 
@@ -381,7 +389,8 @@
     </div>
 
     <div class="trending-section" id="trendingSection">
-      <!-- Your trending content here -->
+      <!-- optional home rows get injected -->
+      <div class="trending-grid" id="trendingGrid"></div>
     </div>
 
     <div class="history-section" id="historySection">
@@ -425,37 +434,63 @@
   <div class="modal" id="movieModal">
     <div class="modal-content" id="modalContent">
       <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+      <!-- content injected -->
     </div>
   </div>
 
-  <!-- Auth Modal -->
-  <div class="modal" id="authModal">
-    <div class="auth-modal-content">
-      <button class="modal-close" id="authModalClose" aria-label="Close">&times;</button>
-      
-      <div class="logo" style="justify-content: center; margin-bottom: 1rem;">
-        <div class="logo-icon">C</div>
-        <div class="logo-text">CineVibe</div>
+  <!-- Create Room Modal -->
+  <div class="modal" id="createRoomModal">
+    <div class="room-modal-content">
+      <button class="modal-close" id="createRoomClose" aria-label="Close">&times;</button>
+      <div class="room-form">
+        <h2 class="room-title">Create a Watch Room</h2>
+        <p class="room-subtitle">Invite friends and vibe together in real time</p>
+
+        <div class="room-field">
+          <label class="room-label">Display Name</label>
+          <input type="text" id="crDisplayName" class="room-input" placeholder="e.g., Aisha" required>
+        </div>
+
+        <div class="room-field">
+          <label class="room-label">Room Name</label>
+          <input type="text" id="crRoomName" class="room-input" placeholder="e.g., Friday Scary Night" required>
+        </div>
+
+        <div class="room-field">
+          <label class="room-label">Room ID</label>
+          <div class="room-id-row">
+            <input type="text" id="crRoomId" class="room-input" readonly>
+            <button class="pill-button" id="regenRoomId">↻</button>
+            <button class="pill-button" id="copyRoomId">Copy</button>
+          </div>
+          <small class="room-hint" style="color:var(--text-muted)">Share this code or use the Share button below</small>
+        </div>
+
+        <div class="room-actions">
+          <button class="primary-button" id="crJoinBtn">Join</button>
+          <button class="secondary-button" id="crShareBtn">Share</button>
+        </div>
       </div>
+    </div>
+  </div>
 
-      <h2 class="auth-title" id="authModalTitle">Welcome Back</h2>
-      <p class="auth-subtitle" id="authModalSubtitle">Sign in to access your curated movie collection</p>
-
-      <form class="auth-form" id="authForm">
-        <div class="auth-field">
-          <label class="auth-label">Email</label>
-          <input type="email" id="authEmail" class="auth-input" placeholder="you@example.com" required>
+  <!-- Join Room Modal -->
+  <div class="modal" id="joinRoomModal">
+    <div class="room-modal-content">
+      <button class="modal-close" id="joinRoomClose" aria-label="Close">&times;</button>
+      <div class="room-form">
+        <h2 class="room-title">Join a Room</h2>
+        <div class="room-field">
+          <label class="room-label">Display Name</label>
+          <input type="text" id="jrDisplayName" class="room-input" placeholder="e.g., Aisha" required>
         </div>
-        <div class="auth-field">
-          <label class="auth-label">Password</label>
-          <input type="password" id="authPassword" class="auth-input" placeholder="••••••••" required minlength="6">
+        <div class="room-field">
+          <label class="room-label">Room ID</label>
+          <input type="text" id="jrRoomId" class="room-input" placeholder="Paste the code">
         </div>
-        <button type="submit" class="auth-button" id="authSubmitBtn">Sign In</button>
-      </form>
-
-      <div class="auth-toggle">
-        <span id="authToggleText">Don't have an account?</span>
-        <button type="button" id="authToggleBtn">Sign up</button>
+        <div class="room-actions">
+          <button class="primary-button" id="jrJoinBtn">Join</button>
+        </div>
       </div>
     </div>
   </div>
@@ -472,556 +507,791 @@
     </div>
   </footer>
 
-  <!-- Supabase JS -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
-  <script>
-    /************************************************************************
-     * CineVibe - Updated front-end (FULL) - requires login before calling
-     * /api/recommend. Sends Authorization: Bearer <supabase_access_token>
-     ************************************************************************/
-
-    // ---------- Supabase (keep key inline per your request) ----------
-    const SUPABASE_URL = 'https://zglrxflhkdlksbkohnry.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnbHJ4Zmxoa2Rsa3Nia29obnJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0MjE5MDIsImV4cCI6MjA3ODk5NzkwMn0.AewHBx__MlULdhVrvVA7O3rFGtO5smIXX_ljHcvxf00';
-    const { createClient } = supabase;
-    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    // ---------- State ----------
-    let currentUser = null;      // supabase user object (user info)
-    let currentSession = null;   // supabase session (contains access_token)
-
-    // ---------- DOM ----------
-    const authButton = document.getElementById('authButton');
-    const authModal = document.getElementById('authModal');
-    const authModalClose = document.getElementById('authModalClose');
-    const authForm = document.getElementById('authForm');
-    const authModalTitle = document.getElementById('authModalTitle');
-    const authModalSubtitle = document.getElementById('authModalSubtitle');
-    const authSubmitBtn = document.getElementById('authSubmitBtn');
-    const authToggleBtn = document.getElementById('authToggleBtn');
-    const authToggleText = document.getElementById('authToggleText');
-    const searchForm = document.getElementById('searchForm');
-    const historyToggle = document.getElementById('historyToggle');
-    const historySection = document.getElementById('historySection');
-    const historyGrid = document.getElementById('historyGrid');
-    const loadingScreen = document.getElementById('loadingScreen');
-    const moodInput = document.getElementById('moodInput');
-    const moviesGrid = document.getElementById('moviesGrid');
-    const moviesSection = document.getElementById('moviesSection');
-    const moviesTitle = document.getElementById('moviesTitle');
-    const logoHome = document.getElementById('logoHome');
-    const shuffleBtn = document.getElementById('shuffleBtn');
-
-    // music UI
-    const musicToggleBtn = document.getElementById('musicToggle');
-    const musicVolume = document.getElementById('musicVolume');
-
-    // suggestion buttons (delegation)
-    const suggestionButtons = document.querySelectorAll('.suggestion-button');
-
-    // ---------- Helpers ----------
-    function toast(msg, timeout = 1600) {
-      const el = document.createElement('div');
-      el.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:rgba(0,0,0,0.7);color:#fff;padding:10px 14px;border-radius:12px;z-index:99999;font-family:Inter,system-ui;font-size:14px';
-      el.textContent = msg;
-      document.body.appendChild(el);
-      setTimeout(()=>{ el.style.opacity='0'; setTimeout(()=>el.remove(),260); }, timeout);
-    }
-
-    function showNotification(message, type='info') {
-      const notification = document.createElement('div');
-      notification.style.cssText = `
-        position: fixed;
-        top: 5rem;
-        right: 1rem;
-        background: var(--bg-card);
-        border: 1px solid ${type === 'error' ? 'hsl(0, 84%, 60%)' : 'var(--accent-cyan)'};
-        color: var(--text-primary);
-        padding: 1rem 1.5rem;
-        border-radius: .75rem;
-        z-index: 1000;
-        animation: slideInRight .3s ease-out;
-        box-shadow: var(--shadow-card);
-        max-width: 90vw;
-      `;
-      notification.textContent = message;
-      document.body.appendChild(notification);
-      setTimeout(() => {
-        notification.style.animation = 'slideOutRight .3s ease-out';
-        setTimeout(() => notification.remove(), 300);
-      }, 3000);
-    }
-
-    // Add slide animations
-    (function addSlideStyles(){
-      const style = document.createElement('style');
-      style.textContent = `
-      @keyframes slideInRight {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-      }
-      @keyframes slideOutRight {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
-      }`;
-      document.head.appendChild(style);
-    })();
-
-    // ---------- Auth state handling ----------
-    supabaseClient.auth.onAuthStateChange((event, session) => {
-      currentSession = session ?? null;
-      currentUser = session?.user ?? null;
-      updateUIForAuth();
-      // if user logged in and history is open, load it
-      if (currentUser && historySection.classList.contains('show')) loadHistory();
-    });
-
-    // initial check
-    (async () => {
-      const { data } = await supabaseClient.auth.getSession();
-      currentSession = data?.session ?? null;
-      currentUser = data?.session?.user ?? null;
-      updateUIForAuth();
-    })();
-
-    function updateUIForAuth(){
-      if (currentUser) {
-        authButton.textContent = 'Sign Out';
-        historyToggle.style.display = 'block';
-      } else {
-        authButton.textContent = 'Sign In';
-        historyToggle.style.display = 'none';
-        historySection.classList.remove('show');
-      }
-    }
-
-    // Auth button click
-    authButton.addEventListener('click', () => {
-      if (currentUser) {
-        // sign out
-        supabaseClient.auth.signOut().then(() => {
-          currentUser = null; currentSession = null;
-          updateUIForAuth();
-          showNotification('Signed out', 'info');
-        }).catch(err => { showNotification(err.message || 'Sign out failed', 'error'); });
-      } else {
-        openAuthModal();
-      }
-    });
-
-    // open/close auth modal
-    function openAuthModal() {
-      authModal.style.display = 'flex';
-      updateAuthModal();
-    }
-    authModalClose.addEventListener('click', ()=> authModal.style.display='none');
-    authModal.addEventListener('click', (e) => { if (e.target === authModal) authModal.style.display='none'; });
-
-    // toggle login/signup
-    let isLogin = true;
-    authToggleBtn.addEventListener('click', () => { isLogin = !isLogin; updateAuthModal(); });
-    function updateAuthModal(){
-      if (isLogin) {
-        authModalTitle.textContent = 'Welcome Back';
-        authModalSubtitle.textContent = 'Sign in to access your curated movie collection';
-        authSubmitBtn.textContent = 'Sign In';
-        authToggleText.textContent = "Don't have an account?";
-        authToggleBtn.textContent = 'Sign up';
-      } else {
-        authModalTitle.textContent = 'Create Account';
-        authModalSubtitle.textContent = 'Join CineVibe to start your cinematic journey';
-        authSubmitBtn.textContent = 'Sign Up';
-        authToggleText.textContent = 'Already have an account?';
-        authToggleBtn.textContent = 'Sign in';
-      }
-    }
-
-    // handle auth form submit (sign in / sign up)
-    authForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('authEmail').value;
-      const password = document.getElementById('authPassword').value;
-      if (!email || !password) return showNotification('Please provide email & password', 'error');
-
-      authSubmitBtn.disabled = true;
-      authSubmitBtn.textContent = 'Processing...';
-      try {
-        if (isLogin) {
-          const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-          if (error) throw error;
-          authForm.reset();
-          authModal.style.display = 'none';
-          showNotification('Signed in — enjoy!', 'success');
-        } else {
-          const { error } = await supabaseClient.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
-          if (error) throw error;
-          authForm.reset();
-          authModal.style.display = 'none';
-          showNotification('Account created — check email to confirm', 'success');
-        }
-      } catch (err) {
-        showNotification(err.message || 'Auth error', 'error');
-      } finally {
-        authSubmitBtn.disabled = false;
-        updateAuthModal();
-      }
-    });
-
-    // ---------- History ----------
-    historyToggle.addEventListener('click', () => {
-      historySection.classList.toggle('show');
-      if (historySection.classList.contains('show')) loadHistory();
-    });
-
-    async function loadHistory() {
-      if (!currentUser) return;
-      try {
-        const { data, error } = await supabaseClient
-          .from('search_history')
-          .select('*')
-          .eq('user_id', currentUser.id)
-          .order('searched_at', { ascending: false })
-          .limit(20);
-        if (error) throw error;
-        historyGrid.innerHTML = '';
-        if (!data || data.length === 0) {
-          historyGrid.innerHTML = '<p style="text-align:center; color: var(--text-secondary); padding: 2rem;">No searches yet. Start exploring!</p>';
-          return;
-        }
-        data.forEach(item => {
-          const historyItem = document.createElement('div');
-          historyItem.className = 'history-item';
-          historyItem.innerHTML = `
-            <div>
-              <div class="history-mood">${escapeHtml(item.mood_query)}</div>
-              <div class="history-date">${formatDate(item.searched_at)}</div>
-            </div>
-            <div style="color: var(--text-muted); font-size: .85rem;">${item.results_count || 0} results</div>
-          `;
-          historyItem.addEventListener('click', () => {
-            moodInput.value = item.mood_query;
-            historySection.classList.remove('show');
-          });
-          historyGrid.appendChild(historyItem);
-        });
-      } catch (err) {
-        console.error('History load error', err);
-      }
-    }
-
-    // ---------- Search handling (BLOCKED if not logged in) ----------
-    // This is the core fix: search will NOT call backend unless currentSession exists.
-    searchForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!currentUser || !currentSession) {
-        showNotification('Please sign in to search for movies', 'error');
-        openAuthModal();
-        return;
-      }
-
-      const mood = (moodInput.value || '').trim();
-      if (!mood) return;
-
-      // show loading
-      loadingScreen.style.display = 'flex';
-
-      try {
-        // 1) Save to supabase search_history (optional)
-        const insertPayload = {
-          user_id: currentUser.id,
-          mood_query: mood,
-          results_count: 0,
-          searched_at: new Date().toISOString()
-        };
-        const { error: insertError } = await supabaseClient.from('search_history').insert(insertPayload);
-        if (insertError) console.warn('Could not save history:', insertError.message || insertError);
-
-        // 2) Call backend with Authorization header containing Supabase access token
-        const backendUrl = (location.hostname.includes('localhost') ? 'http://localhost:5000' : 'https://cinevibe-movie.onrender.com') + '/api/recommend';
-
-        const res = await fetch(backendUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            // PASS the Supabase access token to backend for validation
-            'Authorization': `Bearer ${currentSession.access_token}`
-          },
-          body: JSON.stringify({ mood })
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-          const msg = data?.error || `Server error (${res.status})`;
-          throw new Error(msg);
-        }
-
-        // show movies
-        showMovies(data.movies || []);
-        moviesTitle.textContent = `Movies for "${mood}"`;
-        if (moviesSection) moviesSection.classList.add('show');
-        if (historySection && historySection.classList.contains('show')) historySection.classList.remove('show');
-
-        // update results_count in history (best effort)
-        try {
-          const count = Array.isArray(data.movies) ? data.movies.length : 0;
-          await supabaseClient.from('search_history').update({ results_count: count }).eq('user_id', currentUser.id).eq('mood_query', mood);
-        } catch (err) {
-          // non-blocking
-        }
-
-      } catch (err) {
-        console.error('Search error', err);
-        showNotification(err.message || 'Failed to fetch recommendations', 'error');
-      } finally {
-        loadingScreen.style.display = 'none';
-      }
-    });
-
-    // ---------- Movie rendering ----------
-    function showMovies(movies) {
-      if (!moviesGrid) return;
-      moviesGrid.innerHTML = '';
-      if (!movies || !movies.length) {
-        moviesGrid.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:2rem">No recommendations found.</p>';
-        return;
-      }
-
-      movies.forEach((m, i) => {
-        const card = document.createElement('div');
-        card.className = 'movie-card';
-        card.style.animationDelay = `${Math.min(i*0.06,4)}s`;
-        card.innerHTML = `
-          <img src="${escapeAttr(m.poster || '/placeholder-movie.jpg')}" alt="${escapeAttr(m.title || 'Movie')}" class="movie-poster" loading="lazy">
-          <div class="movie-info">
-            <h3 class="movie-title">${escapeHtml(m.title || '')}</h3>
-            <p class="movie-year">${escapeHtml(toYear(m.releaseDate) || '')}</p>
-            <div class="movie-platforms">${(m.ottPlatforms||[]).slice(0,3).map(p=>`<span class="platform-badge">${escapeHtml(p.name)}</span>`).join('')}</div>
-          </div>
-        `;
-        // click opens modal (call details endpoint)
-        card.addEventListener('click', () => openMovieModalById(m.id));
-        moviesGrid.appendChild(card);
-      });
-    }
-
-    async function openMovieModalById(id) {
-      if (!id) return;
-      const modal = document.getElementById('movieModal');
-      const modalContent = document.getElementById('modalContent');
-      if (!modal || !modalContent) return;
-      modalContent.innerHTML = '<button class="modal-close" id="modalClose">&times;</button><div style="padding:2rem;">Loading details…</div>';
-      modal.style.display = 'flex';
-      // fetch details from backend
-      try {
-        const backendUrl = (location.hostname.includes('localhost') ? 'http://localhost:5000' : 'https://cinevibe-movie.onrender.com') + `/api/details/${encodeURIComponent(String(id))}`;
-        const res = await fetch(backendUrl);
-        const json = await res.json();
-        if (!res.ok) throw new Error(json?.error || 'Details not found');
-
-        const movie = json.movie;
-        renderMovieModalContent(movie);
-      } catch (err) {
-        modalContent.innerHTML = `<button class="modal-close" id="modalClose">&times;</button><div style="padding:2rem;">Failed to load details: ${escapeHtml(String(err.message || err))}</div>`;
-      }
-
-      // close button hookup
-      const closeBtn = document.getElementById('modalClose');
-      if (closeBtn) closeBtn.addEventListener('click', closeModalOnce);
-      modal.addEventListener('click', (e) => { if (e.target === modal) closeModalOnce(); }, { once: true });
-    }
-
-    function renderMovieModalContent(movie) {
-      const modalContent = document.getElementById('modalContent');
-      if (!modalContent) return;
-      if (!movie) {
-        modalContent.innerHTML = `<button class="modal-close" id="modalClose">&times;</button><div style="padding:2rem;">No details available</div>`;
-        return;
-      }
-      const rating = Number.isFinite(movie.rating) ? Number(movie.rating).toFixed(1) : '—';
-      const genres = (movie.genres||[]).map(g => `<span style="padding:.25rem .5rem;margin-right:.35rem;background:linear-gradient(90deg,var(--primary-start),var(--primary-end));color:#fff;border-radius:.5rem;font-size:.85rem">${escapeHtml(g)}</span>`).join('');
-      const platforms = (movie.ottPlatforms||[]).map(p => `<div style="padding:.45rem;border-radius:.5rem;border:1px solid var(--border-color);margin-bottom:.45rem;display:flex;align-items:center;justify-content:space-between;background:${p.available?'rgba(200,50,255,0.06)':'transparent'}"><span>${escapeHtml(p.name)}</span>${p.available && p.url?`<a href="${escapeAttr(p.url)}" target="_blank" rel="noopener" style="color:var(--accent-cyan);font-weight:600;text-decoration:none">Watch</a>`:''}</div>`).join('');
-
-      modalContent.innerHTML = `
-        <button class="modal-close" id="modalClose">&times;</button>
-        ${movie.backdrop?`<img src="${escapeAttr(movie.backdrop)}" style="width:100%;height:260px;object-fit:cover;border-radius:1rem 1rem 0 0;">`:''}
-        <div style="padding:1.25rem;">
-          <h2 style="font-family:Space Grotesk, sans-serif;font-size:1.6rem;margin:0 0 .6rem">${escapeHtml(movie.title)}</h2>
-          <div style="color:var(--text-secondary);margin-bottom:.8rem">⭐ ${rating} · ${escapeHtml(toYear(movie.releaseDate) || '')}</div>
-          <p style="color:var(--text-secondary);line-height:1.5">${escapeHtml(movie.overview || '')}</p>
-
-          <div style="margin-top:1rem"><h4 style="color:var(--accent-cyan)">Genres</h4><div style="display:flex;flex-wrap:wrap;gap:.35rem">${genres}</div></div>
-
-          <div style="margin-top:1rem"><h4 style="color:var(--accent-cyan)">Available On</h4>${platforms || '<div style="opacity:.7;color:var(--text-secondary)">No platform info</div>'}</div>
-
-          ${movie.trailerUrl ? `<div style="margin-top:1rem"><h4 style="color:var(--accent-cyan)">Trailer</h4><iframe src="${escapeAttr(movie.trailerUrl)}" width="100%" height="300" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="border-radius:.5rem;border:1px solid var(--border-color);"></iframe></div>` : ''}
+  <!-- Auth Modal (Supabase login/signup) -->
+  <div class="auth-modal" id="authModal" aria-hidden="true">
+    <div class="auth-panel" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <form id="authForm" onsubmit="return false;">
+        <h3 id="authTitle">Sign in to CineVibe</h3>
+        <div class="auth-field">
+          <input id="authEmail" class="auth-input" type="email" placeholder="Email" autocomplete="email" required />
         </div>
-      `;
-    }
+        <div class="auth-field">
+          <input id="authPassword" class="auth-input" type="password" placeholder="Password" autocomplete="current-password" required />
+        </div>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <button id="authSubmit" class="primary-button" type="submit" style="flex:1">Sign In</button>
+          <button id="authClose" class="secondary-button" type="button">Close</button>
+        </div>
+        <div class="auth-aux" style="display:flex;justify-content:space-between;align-items:center;margin-top:.6rem;">
+          <div style="font-size:.88rem;color:var(--text-secondary)"><button id="authModeToggle" class="auth-toggle" type="button">Create account</button></div>
+          <div style="font-size:.82rem;color:var(--text-muted)">Powered by Lovable Cloud</div>
+        </div>
+        <div class="auth-error" id="authError"></div>
+      </form>
+    </div>
+  </div>
 
-    function closeModalOnce() {
-      const modal = document.getElementById('movieModal');
-      if (modal) modal.style.display = 'none';
-      // stop iframes
-      const modalContent = document.getElementById('modalContent');
-      if (modalContent) {
-        modalContent.querySelectorAll('iframe').forEach(f => f.src = 'about:blank');
+  <!-- Scripts: Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    // ---------------- NEW SUPABASE CONFIG (Lovable Cloud) ----------------
+    const SUPABASE_URL = 'https://bvezixrwwyccjpsmwehx.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2ZXppeHJ3d3ljY2pwc213ZWh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3NDkyNDksImV4cCI6MjA4MjMyNTI0OX0.G0l7O3lpSwYS0ZBYaaXfMKzYKZWP6mhZnsLzpv0HHBY';
+    window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ---------------- Helper UI functions for auth ----------------
+    const authModal = document.getElementById('authModal');
+    const authForm = document.getElementById('authForm');
+    const authEmail = document.getElementById('authEmail');
+    const authPassword = document.getElementById('authPassword');
+    const authSubmit = document.getElementById('authSubmit');
+    const authClose = document.getElementById('authClose');
+    const authModeToggle = document.getElementById('authModeToggle');
+    const authErrorEl = document.getElementById('authError');
+    const authStateBtn = document.getElementById('authStateBtn');
+
+    let isLoginMode = true;
+    let pendingMoodForAuth = null;
+
+    function showAuthModal(pendingMood = null) {
+      pendingMoodForAuth = pendingMood;
+      isLoginMode = true;
+      authModeToggle.textContent = 'Create account';
+      authSubmit.textContent = 'Sign In';
+      authErrorEl.textContent = '';
+      authEmail.value = '';
+      authPassword.value = '';
+      authModal.style.display = 'flex';
+      authModal.setAttribute('aria-hidden', 'false');
+      setTimeout(() => authEmail.focus(), 100);
+    }
+    function closeAuthModal() {
+      authModal.style.display = 'none';
+      authModal.setAttribute('aria-hidden', 'true');
+      pendingMoodForAuth = null;
+    }
+    function updateAuthStateUI(sessionUser) {
+      if (!authStateBtn) return;
+      if (sessionUser) {
+        authStateBtn.textContent = '🔓 Sign Out';
+      } else {
+        authStateBtn.textContent = '🔐 Sign In';
       }
     }
 
-    // ---------- Misc UI helpers ----------
-    function escapeHtml(str) {
-      if (str == null) return '';
-      return String(str)
-        .replaceAll('&','&amp;')
-        .replaceAll('<','&lt;')
-        .replaceAll('>','&gt;')
-        .replaceAll('"','&quot;')
-        .replaceAll("'",'&#39;');
-    }
-    function escapeAttr(s){ return escapeHtml(s).replaceAll('"','&quot;'); }
-    function toYear(d) { try { const y=new Date(d).getFullYear(); return Number.isFinite(y) && y>1900?y:''; } catch { return ''; } }
-
-    function formatDate(dateString) {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      const now = new Date();
-      const diff = now - date;
-      const minutes = Math.floor(diff / 60000);
-      const hours = Math.floor(diff / 3600000);
-      const days = Math.floor(diff / 86400000);
-      if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-      if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-      if (days < 7) return `${days} day${days !== 1 ? 's' : ''} ago`;
-      return date.toLocaleDateString();
-    }
-
-    // Suggestion buttons behavior
-    suggestionButtons.forEach(btn => btn.addEventListener('click', () => {
-      moodInput.value = btn.dataset.mood || '';
-    }));
-
-    // Logo reload
-    if (logoHome) logoHome.addEventListener('click', () => location.reload());
-
-    // ---------- Shuffle (calls backend /api/trending/all and then details) ----------
-    if (shuffleBtn) {
-      shuffleBtn.addEventListener('click', async () => {
-        // user must be logged in to see full details as per policy — block if not authenticated
-        if (!currentUser || !currentSession) {
-          showNotification('Please sign in to shuffle and view movies', 'error');
-          openAuthModal();
-          return;
-        }
-        loadingScreen.style.display = 'flex';
-        try {
-          const backendBase = (location.hostname.includes('localhost') ? 'http://localhost:5000' : 'https://cinevibe-movie.onrender.com');
-          const res = await fetch(`${backendBase}/api/trending/all`);
-          const data = await res.json();
-          if (!res.ok) throw new Error(data?.error || 'Failed to fetch trending');
-          // collect a pool and call /api/details for each id to get rating etc, but for simplicity, use hollywood + bollywood + anime arrays
-          const pool = [...(data.hollywood||[]), ...(data.bollywood||[]), ...(data.anime||[])].slice(0, 60);
-          // fetch details for each id (best-effort)
-          const detailPromises = pool.map(p => fetch(`${backendBase}/api/details/${encodeURIComponent(String(p.id))}`).then(r=>r.json()).catch(()=>null));
-          const detailed = (await Promise.all(detailPromises)).map(x=>x?.movie).filter(Boolean);
-          const final = detailed.filter(m => (m.rating||0) > 5.0).slice(0,50);
-          showMovies(final);
-          moviesTitle.textContent = `🎲 Shuffle Mix (50) — Mixed`;
-          if (moviesSection) moviesSection.classList.add('show');
-        } catch (err) {
-          showNotification(err.message || 'Shuffle failed', 'error');
-        } finally {
-          loadingScreen.style.display = 'none';
-        }
-      });
-    }
-
-    // ---------- Music (basic) ----------
-    let bgAudio = null; let bgMusicEnabled = false; let lastTheme = null;
-    const BG_MUSIC = {
-      romantic:'/music/Fall-In-Love-chosic.com_.mp3',
-      sad:'/music/scott-buckley-moonlight(chosic.com).mp3',
-      suspense:'/music/Hidden-Agenda(chosic.com).mp3',
-      horror:'/music/Incantation-chosic.com_.mp3',
-      comedy:'/music/Monkeys-Spinning-Monkeys(chosic.com).mp3',
-      action:'/music/Last-Call-chosic.com_.mp3',
-      scifi:'/music/suspense-sci-fi-underscore-music-loop-300215.mp3',
-      chill:'/music/Heart-Of-The-Ocean(chosic.com).mp3',
-      upbeat:'/music/HEROICCC(chosic.com).mp3',
-    };
-
-    function ensureBgAudio() {
-      if (!bgAudio) { bgAudio = new Audio(); bgAudio.loop=true; bgAudio.volume = musicVolume ? Number(musicVolume.value) : 0.25; }
-      return bgAudio;
-    }
-    async function enableBgMusic() { bgMusicEnabled = true; ensureBgAudio(); try { await bgAudio.play(); } catch {} }
-    function disableBgMusic() { bgMusicEnabled = false; if (bgAudio) try{ bgAudio.pause(); } catch{} }
-    function pickThemeFromText(txt) {
-      const t = (txt||'').toLowerCase();
-      if (/(romance|romantic|love)/.test(t)) return 'romantic';
-      if (/(sad|melancholy|tragic|cry)/.test(t)) return 'sad';
-      if (/(suspense|thrill|mystery|twist)/.test(t)) return 'suspense';
-      if (/(horror|scary|terrifying)/.test(t)) return 'horror';
-      if (/(comedy|funny|laugh)/.test(t)) return 'comedy';
-      if (/(action|fight|battle|chase)/.test(t)) return 'action';
-      if (/(sci[- ]?fi|space|cyberpunk)/.test(t)) return 'scifi';
-      if (/(feel[- ]?good|uplifting|happy|party)/.test(t)) return 'upbeat';
-      return 'chill';
-    }
-    async function setMoodMusicFromText(txt) {
-      const theme = pickThemeFromText(txt);
-      const src = BG_MUSIC[theme];
-      if (!src) return;
-      ensureBgAudio();
-      const abs = new URL(src, location.href).toString();
-      if (bgAudio.src !== abs) { bgAudio.src = abs; bgAudio.load(); }
-      if (bgMusicEnabled) try { await bgAudio.play(); } catch {}
-    }
-
-    if (musicToggleBtn) {
-      musicToggleBtn.addEventListener('click', async () => {
-        if (!bgMusicEnabled) { await enableBgMusic(); musicToggleBtn.textContent='🔊 Music: On'; }
-        else { disableBgMusic(); musicToggleBtn.textContent='🔇 Music: Off'; }
-      });
-    }
-    if (musicVolume) musicVolume.addEventListener('input', ()=> { ensureBgAudio(); bgAudio.volume = Number(musicVolume.value); });
-
-    // ------ Utility: safe text extraction ------
-    function getApiBase() {
-      return location.hostname.includes('localhost') ? 'http://localhost:5000' : 'https://cinevibe-movie.onrender.com';
-    }
-
-    // ---------- On DOM ready load trending rows (optional) ----------
-    document.addEventListener('DOMContentLoaded', () => {
-      // attempt to load trending grid (best-effort)
-      (async () => {
-        try {
-          const res = await fetch(getApiBase() + '/api/trending');
-          const data = await res.json();
-          if (res.ok && Array.isArray(data.movies)) {
-            const g = document.createElement('div');
-            g.className = 'trending-grid';
-            (data.movies||[]).slice(0,8).forEach(m => {
-              const card = document.createElement('div');
-              card.className = 'trending-card';
-              card.innerHTML = `<img src="${escapeAttr(m.poster||'/placeholder-movie.jpg')}" class="trending-poster" loading="lazy">
-                <div class="trending-info"><h3 class="trending-title">${escapeHtml(m.title)}</h3><p class="trending-rating">⭐ ${Number.isFinite(m.rating)?Number(m.rating).toFixed(1):'—'}</p></div>`;
-              card.addEventListener('click', () => openMovieModalById(m.id));
-              g.appendChild(card);
-            });
-            const sec = document.getElementById('trendingSection');
-            if (sec) { sec.innerHTML = '<h2 class="section-title">🔥 Trending</h2>'; sec.appendChild(g); }
-          }
-        } catch (e) { /* ignore */ }
-      })();
+    authClose.addEventListener('click', () => closeAuthModal());
+    authModeToggle.addEventListener('click', () => {
+      isLoginMode = !isLoginMode;
+      authModeToggle.textContent = isLoginMode ? 'Create account' : 'Have an account? Sign in';
+      authSubmit.textContent = isLoginMode ? 'Sign In' : 'Sign Up';
+      authErrorEl.textContent = '';
     });
 
-    // Escape any user input printed into DOM
-    // Done above with escapeHtml / escapeAttr
+    // wire auth submit
+    authForm.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      authSubmit.disabled = true;
+      authErrorEl.textContent = '';
+      const email = authEmail.value.trim();
+      const password = authPassword.value.trim();
+      try {
+        if (isLoginMode) {
+          const { error } = await window.supabase.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          closeAuthModal();
+          const session = (await window.supabase.auth.getSession()).data.session;
+          updateAuthStateUI(session?.user || null);
+          if (pendingMoodForAuth) {
+            // trigger search with stored mood
+            document.getElementById('moodInput').value = pendingMoodForAuth;
+            pendingMoodForAuth = null;
+            // small delay so modal fully closes and UI updates
+            setTimeout(()=> document.getElementById('searchForm').dispatchEvent(new Event('submit', { cancelable: true })), 150);
+          }
+        } else {
+          // sign up
+          const { error } = await window.supabase.auth.signUp({
+            email,
+            password,
+            options: { emailRedirectTo: window.location.origin }
+          });
+          if (error) throw error;
+          authErrorEl.style.color = 'var(--text-secondary)';
+          authErrorEl.textContent = 'Account created! You can now sign in.';
+        }
+      } catch (err) {
+        authErrorEl.style.color = '#FF8A8A';
+        authErrorEl.textContent = err?.message || String(err);
+      } finally {
+        authSubmit.disabled = false;
+      }
+    });
 
-    // END of script
+    // sign out button in navbar
+    authStateBtn?.addEventListener('click', async () => {
+      const s = await window.supabase.auth.getSession();
+      const session = s?.data?.session;
+      if (session) {
+        await window.supabase.auth.signOut();
+        updateAuthStateUI(null);
+        // hide movies section
+        document.getElementById('moviesSection')?.classList.remove('show');
+      } else {
+        showAuthModal();
+      }
+    });
+
+    // Listen to auth changes to update UI
+    window.supabase.auth.onAuthStateChange((event, session) => {
+      updateAuthStateUI(session?.user || null);
+    });
+
+    // Initial auth UI update
+    (async () => {
+      const { data: { session } } = await window.supabase.auth.getSession();
+      updateAuthStateUI(session?.user || null);
+    })();
   </script>
 
-  <script src="./prompt.js" defer></script>
+  <!-- App logic -->
+  <script>
+    (() => {
+      'use strict';
+
+      // ---------- Utilities ----------
+      const $  = (id)  => /** @type {HTMLElement|null} */ (document.getElementById(id));
+      const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+      const noop = () => {};
+      const withTry = async (fn, fallback=null) => { try { return await fn(); } catch { return fallback; } };
+      const normalizeBaseUrl = (u) => (u || '').replace(/\/?$/,'');
+      const toYear = (d) => { const y = new Date(d).getFullYear(); return Number.isFinite(y) && y > 1900 ? y : ''; };
+
+      function toast(msg){ try{ const el=document.createElement('div'); el.className='cv-toast';
+        Object.assign(el.style,{position:'fixed',left:'50%',transform:'translateX(-50%)',bottom:'24px',background:'rgba(0,0,0,0.8)',color:'#fff',padding:'10px 14px',borderRadius:'12px',fontFamily:'system-ui,sans-serif',fontSize:'14px',zIndex:99999,opacity:'0',transition:'opacity 200ms ease'}); el.textContent=msg;
+        document.body.appendChild(el); requestAnimationFrame(()=>{ el.style.opacity='1'; }); setTimeout(()=>{ el.style.opacity='0'; setTimeout(()=>el.remove(),240); },1800);
+      }catch{ alert(msg); } }
+
+      async function fetchJSON(url, options={}, {timeoutMs=15000}={}){
+        const ctrl=new AbortController(); const id=setTimeout(()=>ctrl.abort(),timeoutMs);
+        try{
+          const res=await fetch(url,{...options,signal:ctrl.signal});
+          const text=await res.text(); let json={};
+          try{ json=text?JSON.parse(text):{}; }catch{ json={raw:text}; }
+          if(!res.ok) throw new Error(json?.error || `Request failed (${res.status})`);
+          return json;
+        } finally { clearTimeout(id); }
+      }
+
+      // ---------- UX helpers: dedupe alerts & debounce searches ----------
+      const __appAlertState = { lastMsg: null, lastTs: 0, cooldownMs: 1500 };
+      function showOnceAlert(msg) {
+        try {
+          const now = Date.now();
+          if (msg === __appAlertState.lastMsg && now - __appAlertState.lastTs < __appAlertState.cooldownMs) {
+            return; // suppress duplicate
+          }
+          __appAlertState.lastMsg = msg;
+          __appAlertState.lastTs = now;
+          try { toast(msg); } catch { alert(msg); }
+        } catch { try { alert(msg); } catch {} }
+      }
+      let __lastSearchTs = 0;
+      const __searchMinInterval = 700; // ms
+
+      // ---------- State / DOM ----------
+      let isLoading=false, currentMovies=[], showingHistory=false;
+
+      const searchForm       = $('searchForm');
+      const moodInput        = /** @type {HTMLInputElement|null} */ ($('moodInput'));
+      const searchButton     = /** @type {HTMLButtonElement|null} */ ($('searchButton'));
+      const loadingScreen    = $('loadingScreen');
+      const moviesGrid       = $('moviesGrid');
+      const moviesSection    = $('moviesSection');
+      const moviesTitle      = $('moviesTitle');
+      const movieModal       = $('movieModal');
+      const modalCloseBtn    = $('modalClose');
+      const suggestionButtons= $$('.suggestion-button');
+      const historyToggle    = $('historyToggle');
+      const historySection   = $('historySection');
+      const historyGrid      = $('historyGrid');
+      const trendingSection  = $('trendingSection');
+      const trendingGrid     = $('trendingGrid');
+      const moodSuggestions  = $('moodSuggestions');
+      const logoHome         = $('logoHome');
+      const heroSection      = $('heroSection');
+      const shuffleBtn       = $('shuffleBtn');
+
+      // Rooms UI (optional)
+      const createRoomModal  = $('createRoomModal');
+      const joinRoomModal    = $('joinRoomModal');
+      const createRoomClose  = $('createRoomClose');
+      const joinRoomClose    = $('joinRoomClose');
+      const crDisplayName    = /** @type {HTMLInputElement|null} */ ($('crDisplayName'));
+      const crRoomName       = /** @type {HTMLInputElement|null} */ ($('crRoomName'));
+      const crRoomId         = /** @type {HTMLInputElement|null} */ ($('crRoomId'));
+      const regenRoomId      = $('regenRoomId');
+      const copyRoomIdBtn    = $('copyRoomId');
+      const crJoinBtn        = $('crJoinBtn');
+      const crShareBtn       = $('crShareBtn');
+      const jrDisplayName    = /** @type {HTMLInputElement|null} */ ($('jrDisplayName'));
+      const jrRoomId         = /** @type {HTMLInputElement|null} */ ($('jrRoomId'));
+      const jrJoinBtn        = $('jrJoinBtn');
+
+      // Music UI (optional)
+      const musicToggleBtn   = $('musicToggle');
+      const musicVolume      = /** @type {HTMLInputElement|null} */ ($('musicVolume'));
+
+      // API base
+      const API_BASE_URL = normalizeBaseUrl(
+        location.hostname.includes('localhost') ? 'http://localhost:5000/api'
+                                                : 'https://cinevibe-movie.onrender.com/api'
+      );
+
+      // ---------- Home rows helpers ----------
+      const HOME_ROW_IDS = [
+        'rowTrendingUS','rowTrendingIN',
+        'rowNowUS','rowNowIN',
+        'rowUpcomingUS','rowUpcomingIN',
+        'rowTrendingAnime','rowUpcomingAnime'
+      ];
+
+      function hideHomeSections() {
+        if (heroSection)       heroSection.style.display = 'none';
+        if (trendingSection)   trendingSection.style.display = 'none';
+        if (historySection)    historySection.style.display = 'none';
+        if (moodSuggestions)   moodSuggestions.style.display = 'none';
+        HOME_ROW_IDS.forEach(id => { const sec = $(id); if (sec) sec.style.display = 'none'; });
+      }
+
+      function showHomeSections() {
+        if (heroSection)       heroSection.style.display = 'block';
+        if (trendingSection)   trendingSection.style.display = 'block';
+        if (historySection)    historySection.style.display = 'block';
+        if (moodSuggestions)   moodSuggestions.style.display = 'block';
+        HOME_ROW_IDS.forEach(id => { const sec = $(id); if (sec) sec.style.display = 'block'; });
+        if (moviesSection)     moviesSection.classList.remove('show');
+      }
+
+      // ---------- Rooms ----------
+      function randomRoomId(){ const c=()=>Math.random().toString(36).slice(2,6).toUpperCase(); return `${c()}-${c()}-${c()}-${c()}`; }
+      function roomLink(roomId){ const url=new URL(location.href); if(roomId) url.searchParams.set('roomId',roomId); return url.toString(); }
+      async function saveRoomToFirebase(room){ return withTry(async()=>{ if (window.firebase?.db){ const ref=window.firebase.collection(window.firebase.db,'rooms'); await window.firebase.addDoc(ref,room); return true; } return false; },false); }
+      function saveRoomLocal(room){ const key='cinevibe_rooms'; const rooms=JSON.parse(localStorage.getItem(key)||'[]'); const i=rooms.findIndex(r=>r.roomId===room.roomId); if(i>=0) rooms[i]=room; else rooms.push(room); localStorage.setItem(key,JSON.stringify(rooms)); }
+      function getRoomLocal(roomId){ const rooms=JSON.parse(localStorage.getItem('cinevibe_rooms')||'[]'); return rooms.find(r=>r.roomId===roomId)||null; }
+
+      const createRoomBtn = $('createRoom');
+      const joinRoomBtn   = $('joinRoom');
+      if (createRoomBtn) createRoomBtn.addEventListener('click', () => {
+        if (!createRoomModal) return alert('Create Room UI not found.');
+        if (crDisplayName) crDisplayName.value = localStorage.getItem('cinevibe_displayName') || '';
+        if (crRoomName) crRoomName.value = '';
+        if (crRoomId) crRoomId.value = randomRoomId();
+        createRoomModal.style.display = 'flex';
+      });
+      if (joinRoomBtn) joinRoomBtn.addEventListener('click', () => {
+        if (!joinRoomModal) return alert('Join Room UI not found.');
+        if (jrDisplayName) jrDisplayName.value = localStorage.getItem('cinevibe_displayName') || '';
+        if (jrRoomId) jrRoomId.value = '';
+        joinRoomModal.style.display = 'flex';
+      });
+      if (createRoomClose) createRoomClose.addEventListener('click', () => { if (createRoomModal) createRoomModal.style.display='none'; });
+      if (joinRoomClose)   joinRoomClose.addEventListener('click',   () => { if (joinRoomModal)   joinRoomModal.style.display='none'; });
+
+      if (createRoomModal) createRoomModal.addEventListener('click', (e)=>{ if (e.target===createRoomModal) createRoomModal.style.display='none'; });
+      if (joinRoomModal)   joinRoomModal.addEventListener('click',   (e)=>{ if (e.target===joinRoomModal)   joinRoomModal.style.display='none'; });
+
+      if (crShareBtn) crShareBtn.addEventListener('click', async ()=>{
+        const i = /** @type {HTMLInputElement|null} */ ($('crRoomId'));
+        const id = i?.value?.trim(); if (!id) return alert('Generate a Room ID first.');
+        const link = roomLink(id);
+        if (navigator.share) { try { await navigator.share({ title:'Join my CineVibe Room', text:'Let's watch together!', url:link }); return; } catch {}
+        }
+        const ok = await navigator.clipboard.writeText(link).then(()=>true).catch(()=>false);
+        ok ? toast('Link copied to clipboard!') : alert(`Share this link:\n${link}`);
+      });
+      if (crJoinBtn) crJoinBtn.addEventListener('click', async ()=>{
+        const displayName=/** @type {HTMLInputElement|null} */ ($('crDisplayName'))?.value?.trim();
+        const roomName=/** @type {HTMLInputElement|null} */ ($('crRoomName'))?.value?.trim();
+        const roomId=/** @type {HTMLInputElement|null} */ ($('crRoomId'))?.value?.trim();
+        if (!displayName || !roomName || !roomId) return alert('Please fill all fields.');
+        const room={roomId,roomName,host:displayName,createdAt:new Date().toISOString()};
+        const saved=await saveRoomToFirebase(room); saveRoomLocal(room); localStorage.setItem('cinevibe_displayName',displayName||'');
+        const url=new URL(location.href); url.searchParams.set('roomId',roomId); url.searchParams.set('name',encodeURIComponent(displayName||'')); history.replaceState(null,'',url.toString());
+        alert(saved?'Room created & joined!':'Room created locally & joined!'); if (createRoomModal) createRoomModal.style.display='none';
+      });
+      if (jrJoinBtn) jrJoinBtn.addEventListener('click', async ()=>{
+        const displayName=/** @type {HTMLInputElement|null} */ ($('jrDisplayName'))?.value?.trim();
+        const roomId=(/** @type {HTMLInputElement|null} */ ($('jrRoomId'))?.value||'').trim().toUpperCase();
+        if(!displayName || !roomId) return alert('Please enter display name and room ID.');
+        let room=null;
+        try{
+          if (window.firebase?.db){
+            const ref=window.firebase.collection(window.firebase.db,'rooms');
+            const q=window.firebase.query(ref, window.firebase.orderBy('roomId'), window.firebase.limit(25));
+            const snap=await window.firebase.getDocs(q);
+            snap.forEach(doc=>{ if (doc.data()?.roomId===roomId) room=doc.data(); });
+          }
+        }catch{}
+        if(!room) room=getRoomLocal(roomId) || {roomId,roomName:'CineVibe Room'};
+        localStorage.setItem('cinevibe_displayName',displayName||'');
+        const url=new URL(location.href); url.searchParams.set('roomId',roomId); url.searchParams.set('name',encodeURIComponent(displayName||'')); history.replaceState(null,'',url.toString());
+        alert(`Joined ${room.roomName || 'room'}!`); if (joinRoomModal) joinRoomModal.style.display='none';
+      });
+
+      // ---------- Local history ----------
+      function saveSearchToHistory(mood){
+        const key = 'cinevibe_history';
+        const history = JSON.parse(localStorage.getItem(key) || '[]');
+        history.unshift({ mood, timestamp: new Date().toISOString() });
+        localStorage.setItem(key, JSON.stringify(history.slice(0, 20)));
+      }
+      function loadSearchHistory(){
+        if(!historyGrid) return;
+        const history = JSON.parse(localStorage.getItem('cinevibe_history') || '[]');
+        displayHistory(history);
+      }
+      function displayHistory(history){
+        if(!historyGrid) return;
+        historyGrid.innerHTML='';
+        if(!history?.length){ historyGrid.innerHTML='<p style="text-align:center;color:var(--text-muted);">No search history yet</p>'; return; }
+        history.forEach(item=>{
+          const el=document.createElement('div'); el.className='history-item';
+          el.onclick=()=>{ if(moodInput) moodInput.value=item.mood; handleSearch({preventDefault:noop}); toggleHistory(); };
+          const date = item.timestamp ? new Date(item.timestamp).toLocaleDateString() : '';
+          el.innerHTML=`<div class="history-mood">${item.mood}</div><div class="history-date">${date}</div>`;
+          historyGrid.appendChild(el);
+        });
+      }
+      function toggleHistory(){
+        showingHistory=!showingHistory;
+        if(!historySection || !trendingSection || !moodSuggestions || !moviesSection || !historyToggle) return;
+        if(showingHistory){
+          historySection.classList.add('show'); moviesSection.classList.remove('show');
+          trendingSection.style.display='none'; moodSuggestions.style.display='none'; historyToggle.textContent='🎬 Movies'; loadSearchHistory();
+        } else {
+          historySection.classList.remove('show'); trendingSection.style.display='block'; moodSuggestions.style.display='block';
+          historyToggle.textContent='📚 History'; if(currentMovies.length>0) moviesSection.classList.add('show');
+        }
+      }
+
+      // ---------- Home rows (trending/now/upcoming) ----------
+      function renderRow({title,containerId,movies}){
+        if (!movies || movies.length === 0) return;
+        let section=$(containerId);
+        if(!section){
+          section=document.createElement('section'); section.id=containerId; section.className='trending-section';
+          section.innerHTML=`<h2 class="section-title">${title}</h2><div class="trending-grid"></div>`;
+          (document.querySelector('.container')||document.body).appendChild(section);
+        }
+        const grid = section.querySelector('.trending-grid'); if(!grid) return;
+        grid.innerHTML='';
+        (movies||[]).slice(0,12).forEach((m,i)=>{
+          const card=document.createElement('div'); card.className='trending-card'; card.style.animationDelay=`${i*0.07}s`;
+          card.onclick=()=>openMovieModal(m);
+          const rating=Number.isFinite(m?.rating)?Number(m.rating).toFixed(1):'—';
+          card.innerHTML=`<img src="${m.poster||'/placeholder-movie.jpg'}" alt="${m.title}" class="trending-poster" loading="lazy">
+            <div class="trending-info"><h3 class="trending-title">${m.title}</h3><p class="trending-rating">⭐ ${rating}</p></div>`;
+          grid.appendChild(card);
+        });
+      }
+
+      // NEW: Shuffle/Remix 50
+      async function remix50() {
+        if (isLoading) return;
+        setLoading(true);
+        try {
+          const [all, nowp, upc] = await Promise.all([
+            fetchJSON(`${API_BASE_URL}/trending/all`).catch(() => null),
+            fetchJSON(`${API_BASE_URL}/now-playing`).catch(() => null),
+            fetchJSON(`${API_BASE_URL}/upcoming`).catch(() => null),
+          ]);
+
+          const pool = [];
+          const add = (arr) => (arr || []).forEach(m => m?.id && pool.push(m));
+          if (all?.success) { add(all.hollywood); add(all.bollywood); add(all.anime); }
+          if (nowp?.success) { add(nowp.us); add(nowp.in); }
+          if (upc?.success) { add(upc.hollywood); add(upc.bollywood); add(upc.anime); }
+
+          const byId = new Map();
+          pool.forEach(m => { if (!byId.has(m.id)) byId.set(m.id, m); });
+          const unique = Array.from(byId.values());
+
+          for (let i = unique.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [unique[i], unique[j]] = [unique[j], unique[i]];
+          }
+
+          const pick = unique.slice(0, 70); // some slack for 404s
+          const detailPromises = pick.map(m =>
+            fetchJSON(`${API_BASE_URL}/details/${encodeURIComponent(m.id)}`).catch(() => null)
+          );
+          const detailed = (await Promise.all(detailPromises))
+            .map(x => x?.movie)
+            .filter(Boolean);
+
+          const finalList = detailed.filter(m => (m.rating || 0) > 5.0).slice(0, 50);
+
+          if (!finalList.length) { showOnceAlert('Could not assemble a remix right now. Try again.'); return; }
+
+          currentMovies = finalList;
+          displayMovies(currentMovies);
+          if (moviesTitle) moviesTitle.textContent = `🎲 Shuffle Mix (50) — Hollywood + Bollywood + Anime`;
+          hideHomeSections();
+          if (moviesSection) moviesSection.classList.add('show');
+        } catch (e) {
+          console.error('Remix error:', e);
+          showOnceAlert('Remix failed. Please try again.');
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      // Load and render all home rows, including Anime
+      async function loadHomeRows(){
+        try{
+          const t = await fetchJSON(`${API_BASE_URL}/trending/all`).catch(()=>null);
+          if(t?.success){
+            renderRow({title:'🔥 Trending – Hollywood', containerId:'rowTrendingUS', movies:t.hollywood});
+            renderRow({title:'💥 Trending – Bollywood',  containerId:'rowTrendingIN', movies:t.bollywood});
+            renderRow({title:'🍣 Trending – Anime',      containerId:'rowTrendingAnime', movies:t.anime});
+          }
+
+          const np = await fetchJSON(`${API_BASE_URL}/now-playing`).catch(()=>null);
+          if(np?.success){
+            renderRow({title:'🎟️ In Cinemas Now – US',   containerId:'rowNowUS', movies:np.us});
+            renderRow({title:'🎬 In Cinemas Now – India', containerId:'rowNowIN', movies:np.in});
+          }
+
+          const up = await fetchJSON(`${API_BASE_URL}/upcoming`).catch(()=>null);
+          if(up?.success){
+            renderRow({title:'⏳ Upcoming – Hollywood', containerId:'rowUpcomingUS', movies:up.hollywood});
+            renderRow({title:'🌟 Upcoming – Bollywood', containerId:'rowUpcomingIN', movies:up.bollywood});
+            renderRow({title:'🎌 Upcoming – Anime',     containerId:'rowUpcomingAnime', movies:up.anime});
+          }
+        }catch(e){ console.error('Home rows load error:',e); }
+      }
+
+      // ---------- Trending (simple top grid) ----------
+      async function loadTrendingMovies(){
+        try{
+          const data=await fetchJSON(`${API_BASE_URL}/trending`);
+          if(data?.success && Array.isArray(data.movies)) displayTrendingMovies(data.movies.slice(0,8));
+        }catch(err){ console.error('Failed to load trending movies:',err); }
+      }
+      function displayTrendingMovies(movies){
+        if(!trendingGrid) return; trendingGrid.innerHTML='';
+        (movies||[]).forEach((movie,i)=>{
+          const card=document.createElement('div'); card.className='trending-card'; card.style.animationDelay=`${Math.min(i*0.1,5)}s`;
+          card.onclick=()=>openMovieModal(movie);
+          const rating=Number.isFinite(movie?.rating)?Number(movie.rating).toFixed(1):'—';
+          card.innerHTML=`<img src="${movie?.poster||'/placeholder-movie.jpg'}" alt="${movie?.title||'Movie'}" class="trending-poster" loading="lazy">
+            <div class="trending-info"><h3 class="trending-title">${movie?.title||''}</h3><p class="trending-rating">⭐ ${rating}</p></div>`;
+          trendingGrid.appendChild(card);
+        });
+      }
+
+      // ---------- Search (updated: debounce + deduped alerts) ----------
+      async function handleSearch(e){
+        if (e?.preventDefault) e.preventDefault();
+
+        const now = Date.now();
+        if (now - __lastSearchTs < __searchMinInterval) {
+          return; // ignore too-fast repeat submits
+        }
+        __lastSearchTs = now;
+
+        if (isLoading) return;
+        const mood = moodInput?.value?.trim(); if(!mood) return;
+
+        // Check supabase session
+        try {
+          const { data: { session } } = await window.supabase.auth.getSession();
+          if (!session) {
+            // show auth modal and store pending mood
+            showAuthModal(mood);
+            return;
+          }
+
+          // Grab access token to send to server
+          const accessToken = session.access_token || session?.accessToken || null;
+          if (!accessToken) {
+            showAuthModal(mood);
+            return;
+          }
+
+          // ensure background music and theme
+          if (!bgMusicEnabled) { await enableBgMusic(); if (musicToggleBtn) musicToggleBtn.textContent='🔊 Music: On'; }
+          setMoodMusicFromText(mood);
+
+          setLoading(true);
+          try{
+            const headers = {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`
+            };
+
+            const data = await fetchJSON(`${API_BASE_URL}/recommend`, {
+              method:'POST',
+              headers,
+              body:JSON.stringify({ mood })
+            });
+
+            if(!data?.movies) throw new Error(data?.error || 'Failed to get recommendations');
+
+            currentMovies = data.movies;
+            displayMovies(currentMovies);
+            if (moviesTitle) moviesTitle.textContent = `Movies for "${mood}"`;
+            saveSearchToHistory(mood);
+
+            if (showingHistory) toggleHistory();
+            hideHomeSections();
+            if (moviesSection) moviesSection.classList.add('show');
+          }catch(err){
+            console.error('Search error:',err);
+            showOnceAlert('Failed to get movie recommendations. Please try again.');
+          }finally{ setLoading(false); }
+
+        } catch (err) {
+          console.warn('Auth check failed:', err);
+          showAuthModal(mood);
+        }
+      }
+
+      // ---------- Loading UI ----------
+      function setLoading(loading){
+        isLoading=!!loading;
+        if (loadingScreen) loadingScreen.style.display = loading ? 'flex' : 'none';
+        if (searchButton){
+          searchButton.disabled = loading;
+          searchButton.dataset.origText = searchButton.dataset.origText || searchButton.textContent || 'Find Movies';
+          searchButton.textContent = loading ? 'Searching...' : (searchButton.dataset.origText || 'Find Movies');
+        }
+        if (loading) startLoadingAnimation();
+      }
+      function startLoadingAnimation(){
+        const dotsEl = $('loadingDots'); if(!dotsEl) return;
+        let dots=''; const it=setInterval(()=>{ if(!isLoading){ clearInterval(it); return; } dots=dots.length>=3?'':dots+'.'; dotsEl.textContent=dots; },500);
+      }
+
+      // ---------- Movies grid ----------
+      function displayMovies(movies){
+        if(!moviesGrid) return; moviesGrid.innerHTML='';
+        (movies||[]).forEach((m,i)=> moviesGrid.appendChild(createMovieCard(m,i)));
+      }
+      function createMovieCard(movie,index){
+        const card=document.createElement('div'); card.className='movie-card'; card.style.animationDelay=`${Math.min(index*0.1,5)}s`;
+        card.onclick=()=>openMovieModal(movie);
+        const platforms=(movie?.ottPlatforms||[]).filter(p=>p?.available).slice(0,3).map(p=>`<span class="platform-badge">${p.name}</span>`).join('');
+        card.innerHTML=`<img src="${movie?.poster||'/placeholder-movie.jpg'}" alt="${movie?.title||'Movie'}" class="movie-poster" loading="lazy">
+          <div class="movie-info"><h3 class="movie-title">${movie?.title||''}</h3><p class="movie-year">${toYear(movie?.releaseDate)}</p><div class="movie-platforms">${platforms}</div></div>`;
+        return card;
+      }
+
+     // ---------- Modal + trailer + MORE LIKE THIS ----------
+      function renderMoreLikeThisSkeleton(container){
+        container.innerHTML = `
+          <h3 style="margin:1.5rem 0 .75rem;color:var(--accent-cyan);">More Like This</h3>
+          <div id="moreLikeGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;"></div>
+        `;
+      }
+
+      async function loadMoreLikeThis(id){
+        const host = $('moreLikeHost'); if (!host) return;
+        renderMoreLikeThisSkeleton(host);
+
+        const grid = $('moreLikeGrid'); if (!grid) return;
+        grid.innerHTML = `<div style="opacity:.6">Loading…</div>`;
+
+        const data = await fetchJSON(`${API_BASE_URL}/recommendations/${encodeURIComponent(id)}`).catch(()=>null);
+        const movies = data?.movies || [];
+        grid.innerHTML = '';
+
+        if (!movies.length) {
+          grid.innerHTML = `<div style="opacity:.6">No similar titles found right now.</div>`;
+          return;
+        }
+
+        movies.forEach(m => {
+          const card = document.createElement('div');
+          card.className = 'morelike-card';
+          card.style.cssText = 'cursor:pointer;border-radius:.5rem;overflow:hidden;background:#1b1b1f;border:1px solid var(--border-color);';
+          card.innerHTML = `
+            <img src="${m.poster || '/placeholder-movie.jpg'}" alt="${m.title}" style="width:100%;height:200px;object-fit:cover;display:block">
+            <div style="padding:.5rem .6rem;">
+              <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.title}</div>
+              <div style="font-size:.85rem;opacity:.8">⭐ ${Number.isFinite(m.rating)?Number(m.rating).toFixed(1):'—'} · ${toYear(m.releaseDate)}</div>
+            </div>
+          `;
+          card.addEventListener('click', () => showDetailsById(m.id));
+          grid.appendChild(card);
+        });
+      }
+
+      function openMovieModal(movie){
+        const modalContent=$('modalContent'); if(!movieModal || !modalContent) return;
+        pauseBgForTrailer();
+
+        const platforms=(movie?.ottPlatforms||[]).map(p=>`
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem;border:1px solid ${p?.available?'var(--primary-start)':'var(--border-color)'};border-radius:.5rem;margin-bottom:.5rem;background:${p?.available?'rgba(200,50,255,0.1)':'var(--bg-secondary)'};">
+            <span style="color:${p?.available?'var(--text-primary)':'var(--text-secondary)'};">${p?.name||''}</span>
+            ${p?.available && p?.url ? `<a href="${p.url}" target="_blank" rel="noopener noreferrer" style="color:var(--accent-cyan);text-decoration:none;font-weight:600;">Watch</a>`:''}
+          </div>`).join('');
+        const trailerSrc=(()=>{ if(!movie?.trailerUrl) return ''; const url=new URL(movie.trailerUrl,location.href); if(!url.searchParams.has('enablejsapi')) url.searchParams.set('enablejsapi','1'); return url.toString(); })();
+        const rating=Number.isFinite(movie?.rating)?Number(movie.rating).toFixed(1):'—';
+        const hasRuntime=Number.isFinite(movie?.runtime); const hours=hasRuntime?Math.floor(Number(movie.runtime)/60):0; const mins=hasRuntime?Number(movie.runtime)%60:0;
+
+        modalContent.innerHTML = `
+          <button class="modal-close" id="modalClose">&times;</button>
+          ${movie?.backdrop ? `<img src="${movie.backdrop}" style="width:100%;height:300px;object-fit:cover;border-radius:1rem 1rem 0 0;">`:''}
+          <div class="modal-content-inner" style="padding:2rem;">
+            <h2 style="font-family:'Space Grotesk',sans-serif;font-size:2rem;margin-bottom:1rem;background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">${movie?.title||''}</h2>
+            <div style="display:flex;gap:1rem;margin-bottom:1rem;color:var(--text-secondary);">
+              <span style="color:var(--accent-green);">⭐ ${rating}</span>
+              <span>📅 ${toYear(movie?.releaseDate)}</span>
+              ${hasRuntime?`<span>⏱ ${hours}h ${mins}m</span>`:''}
+            </div>
+            <p style="line-height:1.6;margin-bottom:1.25rem;color:var(--text-secondary);">${movie?.overview||''}</p>
+
+            <!-- More Like This host -->
+            <div id="moreLikeHost" style="margin:1rem 0 1.75rem;"></div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
+              <div>
+                <h3 style="margin-bottom:1rem;color:var(--accent-cyan);">Genres</h3>
+                <div style="display:flex;flex-wrap:wrap;gap:.5rem;">
+                  ${(movie?.genres||[]).map(g=>`<span style="padding:.25rem .75rem;background:var(--gradient-primary);border-radius:1rem;font-size:.8rem;color:white;">${g}</span>`).join('')}
+                </div>
+                ${movie?.director?`<h3 style="margin:1rem 0 .5rem;color:var(--accent-cyan);">Director</h3><p style="color:var(--text-secondary);">${movie.director}</p>`:''}
+              </div>
+              <div>
+                <h3 style="margin-bottom:1rem;color:var(--accent-cyan);">Available On</h3>
+                ${platforms}
+              </div>
+            </div>
+
+            ${movie?.trailerUrl?`
+              <div style="margin-top:2rem;">
+                <h3 style="margin-bottom:1rem;color:var(--accent-cyan);">Trailer</h3>
+                <iframe id="cvTrailer" src="${trailerSrc}" width="100%" height="300" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="border-radius:.5rem;border:1px solid var(--border-color);"></iframe>
+              </div>`:''}
+          </div>`;
+
+        const closeBtn=$('modalClose'); if(closeBtn) closeBtn.addEventListener('click', closeModal, {once:true});
+        movieModal.addEventListener('click', (e)=>{ if(e.target===movieModal) closeModal(); }, {once:true});
+        movieModal.style.display='flex';
+
+        // load "more like this"
+        loadMoreLikeThis(movie.id);
+      }
+
+      function stopAllMediaInModal(){
+        const modalContent=$('modalContent'); if(!modalContent) return;
+        modalContent.querySelectorAll('video').forEach(v=>{ try{ v.pause(); v.currentTime=0; }catch{} });
+        modalContent.querySelectorAll('iframe').forEach(frame=>{
+          const src=frame.getAttribute('src'); if(!src) return;
+          try{ frame.contentWindow?.postMessage(JSON.stringify({event:'command',func:'stopVideo',args:[]}), '*'); }catch{}
+          frame.setAttribute('src','about:blank');
+        });
+      }
+      function closeModal(){
+        if(!movieModal) return;
+        stopAllMediaInModal();
+        movieModal.style.display='none';
+        resumeBgAfterTrailer();
+      }
+
+
+      // ---------- BG Music Engine ----------
+      let bgAudio=null, bgMusicEnabled=false, lastTheme=null;
+      const BG_MUSIC = {
+        romantic:'/music/Fall-In-Love-chosic.com_.mp3',
+        sad:'/music/scott-buckley-moonlight(chosic.com).mp3',
+        suspense:'/music/Hidden-Agenda(chosic.com).mp3',
+        horror:'/music/Incantation-chosic.com_.mp3',
+        comedy:'/music/Monkeys-Spinning-Monkeys(chosic.com).mp3',
+        action:'/music/Last-Call-chosic.com_.mp3',
+        scifi:'/music/suspense-sci-fi-underscore-music-loop-300215.mp3',
+        chill:'/music/Heart-Of-The-Ocean(chosic.com).mp3',
+        upbeat:'/music/HEROICCC(chosic.com).mp3',
+      };
+      function pickThemeFromText(txt){
+        const t=(txt||'').toLowerCase();
+        if (/(romance|romantic|love|sapphic|heartwarming|tearjerker|kiss|date)/.test(t)) return 'romantic';
+        if (/(sad|melancholy|tragic|cry|breakup|lonely|somber)/.test(t)) return 'sad';
+        if (/(suspense|thrill|mystery|twist|mind-?bending|tense|noir|detective)/.test(t)) return 'suspense';
+        if (/(horror|scary|terrifying|haunt|slasher|possession|demonic)/.test(t)) return 'horror';
+        if (/(comedy|funny|laugh|quirky|sitcom|rom-?com)/.test(t)) return 'comedy';
+        if (/(action|fight|battle|war|chase|adrenaline|superhero)/.test(t)) return 'action';
+        if (/(sci[- ]?fi|science fiction|space|cyberpunk|futur)/.test(t)) return 'scifi';
+        if (/(feel[- ]?good|uplifting|happy|optimistic|wholesome|party)/.test(t)) return 'upbeat';
+        if (/(chill|slice of life|calm|cozy|comfort|lofi|cult classic|underground)/.test(t)) return 'chill';
+        return 'chill';
+      }
+      function ensureBgAudio(){ if(bgAudio) return bgAudio; bgAudio=new Audio(); bgAudio.loop=true; bgAudio.volume = musicVolume ? Number(musicVolume.value) : 0.25; return bgAudio; }
+      async function setMoodMusicFromText(txt){ const theme=pickThemeFromText(txt); await setBgMusicTheme(theme); }
+      async function setBgMusicTheme(theme){
+        try{ ensureBgAudio(); const src=BG_MUSIC[theme]; if(!src) return;
+          if(lastTheme===theme && !bgAudio.paused) return;
+          const absSrc=new URL(src,location.href).toString();
+          if(bgAudio.src!==absSrc){ bgAudio.src=absSrc; bgAudio.load(); }
+          lastTheme=theme;
+          if(bgMusicEnabled){ await bgAudio.play().catch(()=>{}); }
+        }catch(e){ console.warn('BG music error:',e); }
+      }
+      async function enableBgMusic(){ bgMusicEnabled=true; ensureBgAudio(); try{ await bgAudio.play(); }catch{} }
+      function disableBgMusic(){ bgMusicEnabled=false; if(bgAudio){ try{ bgAudio.pause(); }catch{} } }
+      function pauseBgForTrailer(){ if(bgAudio && !bgAudio.paused){ try{ bgAudio.pause(); }catch{} } }
+      async function resumeBgAfterTrailer(){ if(bgAudio && bgMusicEnabled){ try{ await bgAudio.play(); }catch{} } }
+
+      if (musicToggleBtn) {
+        musicToggleBtn.addEventListener('click', async () => {
+          if (!bgMusicEnabled) { await enableBgMusic(); musicToggleBtn.textContent = '🔊 Music: On'; }
+          else { disableBgMusic(); musicToggleBtn.textContent = '🔇 Music: Off'; }
+        });
+      }
+      if (musicVolume) musicVolume.addEventListener('input', () => { ensureBgAudio(); bgAudio.volume = Number(musicVolume.value); });
+
+      // ---------- Events / Init ----------
+      if (searchForm) searchForm.addEventListener('submit', handleSearch);
+      if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal);
+      if (historyToggle) historyToggle.addEventListener('click', toggleHistory);
+      if (shuffleBtn) shuffleBtn.addEventListener('click', remix50);
+
+      suggestionButtons.forEach((button) => {
+        button.addEventListener('click', (e) => {
+          const btn = /** @type {HTMLElement} */ (e.currentTarget);
+          const mood = btn?.dataset?.mood || '';
+          if (moodInput) moodInput.value = mood;
+          handleSearch(e);
+        });
+      });
+
+      if (movieModal) {
+        movieModal.addEventListener('click', (e) => { if (e.target === movieModal) closeModal(); });
+      }
+
+      if (logoHome) {
+        logoHome.style.cursor = 'pointer';
+        logoHome.addEventListener('click', () => { window.location.reload(); });
+      }
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (movieModal && movieModal.style.display === 'flex') closeModal();
+          if (createRoomModal && createRoomModal.style.display === 'flex') createRoomModal.style.display = 'none';
+          if (joinRoomModal && joinRoomModal.style.display === 'flex') joinRoomModal.style.display = 'none';
+        }
+      });
+
+      document.addEventListener('DOMContentLoaded', () => {
+        loadTrendingMovies();
+        loadSearchHistory();
+        loadHomeRows();
+      });
+
+      console.log('🎬 CineVibe loaded! Ready to find your perfect vibe.');
+    })();
+  </script>
 </body>
 </html>
